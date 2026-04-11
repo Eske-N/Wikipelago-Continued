@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wikipelago</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="layout">
+    <header class="topbar">
+      <h1>Wikipelago</h1>
+      <div id="connBadge" class="badge offline">Offline</div>
+    </header>
+
+    <main class="main-grid">
+      <section class="article-panel">
+        <div id="articleTitle" class="article-title">Wikipedia</div>
+        <div id="searchOverlay" class="search-overlay hidden">
+          <div class="search-row">
+            <input id="pageSearchInput" type="text" placeholder="Search this page" />
+            <button id="closeSearchBtn" type="button">Close</button>
+          </div>
+          <div class="search-meta">
+            <span id="searchStatus">Locked</span>
+            <span id="searchLetters">Letters: -</span>
+          </div>
+        </div>
+        <article id="articleBody" class="article-body"></article>
+      </section>
+
+      <aside class="side-panel">
+        <div class="card">
+          <h2>Connection</h2>
+          <label>Server</label>
+          <input id="serverInput" type="text" placeholder="archipelago.gg:PORT" />
+          <label>Slot</label>
+          <input id="slotInput" type="text" placeholder="WikiTester" />
+          <label>Password</label>
+          <input id="passwordInput" type="password" placeholder="(optional)" />
+          <button id="connectBtn">Connect</button>
+        </div>
+
+        <div class="card">
+          <h2>Run</h2>
+          <p><strong>Round:</strong> <span id="roundText">-</span></p>
+          <p><strong>Target:</strong> <span id="targetText">-</span></p>
+          <p><strong>Goal:</strong> <span id="goalText">-</span></p>
+          <p><strong>Clicks:</strong> <span id="clicksText">0</span></p>
+          <p><strong>Fragments:</strong> <span id="fragmentsText">0/0</span></p>
+          <p><strong>Compass:</strong> <span id="compassHint">-</span></p>
+          <div class="progress-wrap"><div id="roundProgress" class="progress"></div></div>
+          <div id="toast" class="toast hidden"></div>
+        </div>
+
+        <div class="card">
+          <h2>Items</h2>
+          <p>Back Button: <span id="backItem">Locked</span></p>
+          <p>Ctrl+F Lens: <span id="searchItem">Locked</span></p>
+          <p>Search Letters: <span id="searchLettersItem">-</span></p>
+          <p>Scroll Speed: <span id="scrollItem">Normal</span></p>
+          <p>Wiki Compass: <span id="compassItem">Locked</span></p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
