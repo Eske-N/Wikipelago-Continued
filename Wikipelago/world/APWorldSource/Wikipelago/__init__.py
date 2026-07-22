@@ -488,6 +488,26 @@ class WikipelagoWorld(World):
     def _search_starting_letters(self) -> set[str]:
         return set(SEARCH_STARTING_LETTERS.get(self.options.search_starting_letters.value, set()))
 
+    def _display_unlock_items(self) -> list[str]:
+        unlocks: list[str] = []
+        if self.options.randomize_tables.value:
+            unlocks.append("Table Lens")
+        if self.options.randomize_pictures.value:
+            unlocks.append("Picture Lens")
+        if self.options.randomize_incipit.value:
+            unlocks.append("Lead Lens")
+        if self.options.randomize_infoboxes.value:
+            unlocks.append("Infobox Lens")
+        if self.options.randomize_toc.value:
+            unlocks.append("Contents Lens")
+        if self.options.randomize_navboxes.value:
+            unlocks.append("Navbox Lens")
+        if self.options.randomize_hatnotes.value:
+            unlocks.append("Hatnote Lens")
+        if self.options.randomize_references.value:
+            unlocks.append("Reference Lens")
+        return unlocks
+
     def generate_early(self) -> None:
         round_count = self.options.check_count.value
         selected_topics = self._selected_topics()
@@ -575,13 +595,21 @@ class WikipelagoWorld(World):
         round_access_count = max(0, (round_count - early_open + per_unlock - 1) // per_unlock)
         search_letters_needed = 26 - len(self._search_starting_letters()) if self.options.searchsanity.value else 0
         scroll_upgrades_needed = SCROLL_SPEED_UPGRADES if self.options.scrollsanity.value else 0
+        display_unlocks = self._display_unlock_items()
 
-        mandatory_items = required_fragments + 3 + round_access_count + search_letters_needed + scroll_upgrades_needed
+        mandatory_items = (
+            required_fragments
+            + 3
+            + round_access_count
+            + search_letters_needed
+            + scroll_upgrades_needed
+            + len(display_unlocks)
+        )
         if mandatory_items > round_count:
             raise Exception(
                 "Wikipelago item math invalid: required progression items exceed round locations. "
                 f"mandatory={mandatory_items}, round_locations={round_count}. "
-                "Lower required_fragments, reduce sanity load, or lower round access pressure "
+                "Lower required_fragments, reduce sanity/display unlock load, or lower round access pressure "
                 "(increase start_rounds_unlocked / rounds_per_unlock)."
             )
 
@@ -598,6 +626,8 @@ class WikipelagoWorld(World):
             for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
                 if letter not in self._search_starting_letters():
                     pool.append(self.create_item(f"Search Letter {letter}"))
+        for unlock_name in display_unlocks:
+            pool.append(self.create_item(unlock_name))
         for _ in range(round_access_count):
             pool.append(self.create_item("Round Access"))
         while len(pool) < round_count:
@@ -652,6 +682,14 @@ class WikipelagoWorld(World):
             "scrollsanity": bool(self.options.scrollsanity.value),
             "scroll_speed_upgrades": SCROLL_SPEED_UPGRADES,
             "search_starting_letters": sorted(self._search_starting_letters()),
+            "randomize_tables": bool(self.options.randomize_tables.value),
+            "randomize_pictures": bool(self.options.randomize_pictures.value),
+            "randomize_incipit": bool(self.options.randomize_incipit.value),
+            "randomize_infoboxes": bool(self.options.randomize_infoboxes.value),
+            "randomize_toc": bool(self.options.randomize_toc.value),
+            "randomize_navboxes": bool(self.options.randomize_navboxes.value),
+            "randomize_hatnotes": bool(self.options.randomize_hatnotes.value),
+            "randomize_references": bool(self.options.randomize_references.value),
             "location_ids": {
                 "rounds": round_location_ids,
                 "grand_goal": self.location_name_to_id["Grand Goal"],

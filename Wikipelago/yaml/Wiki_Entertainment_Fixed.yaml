@@ -45,6 +45,20 @@ Wikipelago:
   # halo_combat_evolved
   goal_article_preset: dark_souls
 
+  searchsanity: false
+  scrollsanity: false
+  search_starting_letters: none
+
+  # Display unlocks (false = show like normal Wikipedia).
+  randomize_tables: false
+  randomize_pictures: false
+  randomize_incipit: false
+  randomize_infoboxes: false
+  randomize_toc: false
+  randomize_navboxes: false
+  randomize_hatnotes: false
+  randomize_references: false
+
   # Category toggles.
   # Turn categories on/off to control what kinds of articles appear.
   include_video_games: true

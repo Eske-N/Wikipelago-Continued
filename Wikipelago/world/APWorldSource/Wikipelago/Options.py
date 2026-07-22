@@ -46,6 +46,54 @@ class Scrollsanity(Toggle):
     default = 0
 
 
+class RandomizeTables(Toggle):
+    """When enabled, Wikipedia tables stay hidden until Table Lens is received."""
+    display_name = "Randomize Tables"
+    default = 0
+
+
+class RandomizePictures(Toggle):
+    """When enabled, Wikipedia images/galleries stay hidden until Picture Lens is received."""
+    display_name = "Randomize Pictures"
+    default = 0
+
+
+class RandomizeIncipit(Toggle):
+    """When enabled, the lead/intro section stays hidden until Lead Lens is received."""
+    display_name = "Randomize Incipit"
+    default = 0
+
+
+class RandomizeInfoboxes(Toggle):
+    """When enabled, infoboxes stay hidden until Infobox Lens is received."""
+    display_name = "Randomize Infoboxes"
+    default = 0
+
+
+class RandomizeToc(Toggle):
+    """When enabled, the table of contents stays hidden until Contents Lens is received."""
+    display_name = "Randomize Table of Contents"
+    default = 0
+
+
+class RandomizeNavboxes(Toggle):
+    """When enabled, navboxes and See also hubs stay hidden until Navbox Lens is received."""
+    display_name = "Randomize Navboxes"
+    default = 0
+
+
+class RandomizeHatnotes(Toggle):
+    """When enabled, hatnotes stay hidden until Hatnote Lens is received."""
+    display_name = "Randomize Hatnotes"
+    default = 0
+
+
+class RandomizeReferences(Toggle):
+    """When enabled, footnotes/references stay hidden until Reference Lens is received."""
+    display_name = "Randomize References"
+    default = 0
+
+
 class SearchStartingLetters(Choice):
     display_name = "Search Starting Letters"
     option_none = 0
@@ -154,6 +202,14 @@ class WikipelagoOptions(PerGameCommonOptions):
     random_goal_article: RandomGoalArticle
     searchsanity: Searchsanity
     scrollsanity: Scrollsanity
+    randomize_tables: RandomizeTables
+    randomize_pictures: RandomizePictures
+    randomize_incipit: RandomizeIncipit
+    randomize_infoboxes: RandomizeInfoboxes
+    randomize_toc: RandomizeToc
+    randomize_navboxes: RandomizeNavboxes
+    randomize_hatnotes: RandomizeHatnotes
+    randomize_references: RandomizeReferences
     search_starting_letters: SearchStartingLetters
     include_video_games: IncludeVideoGames
     include_board_games: IncludeBoardGames

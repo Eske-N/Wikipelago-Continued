@@ -25,6 +25,17 @@ Wikipelago:
   scrollsanity: false
   search_starting_letters: none
 
+  # Display unlocks (false = show like normal Wikipedia).
+  # When true, that page element stays locked until its Lens item is received.
+  randomize_tables: false
+  randomize_pictures: false
+  randomize_incipit: false
+  randomize_infoboxes: false
+  randomize_toc: false
+  randomize_navboxes: false
+  randomize_hatnotes: false
+  randomize_references: false
+
   include_video_games: true
   include_board_games: true
   include_movies: true
