@@ -8,7 +8,7 @@ Each round gives you a **Start article** and a **Target article**. You navigate 
 
 Paste your hosted client URL here:
 
-- **Wikipelago Web Client:** `PASTE_YOUR_LINK_HERE`
+- **Wikipelago Web Client:** https://wikipelago-contd.onrender.com/
 
 ## What This Repository Contains
 
@@ -68,7 +68,7 @@ Players can enable/disable article groups in their YAML:
 
 ## Quick Start (Player)
 
-1. Open the web client URL: https://wikipelago-3.onrender.com/ 
+1. Open the web client URL: https://wikipelago-contd.onrender.com/ 
 2. Enter:
    - Archipelago server (example: `archipelago.gg:PORT`)
    - slot name
