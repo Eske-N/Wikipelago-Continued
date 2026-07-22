@@ -20,6 +20,14 @@ item_table: dict[str, WikipelagoItemData] = {
     "Footnote": WikipelagoItemData(ITEM_OFFSET + 6, ItemClassification.filler),
     "Round Access": WikipelagoItemData(ITEM_OFFSET + 7, ItemClassification.progression),
     "Progressive Scroll Speed": WikipelagoItemData(ITEM_OFFSET + 8, ItemClassification.useful),
+    "Table Lens": WikipelagoItemData(ITEM_OFFSET + 9, ItemClassification.useful),
+    "Picture Lens": WikipelagoItemData(ITEM_OFFSET + 10, ItemClassification.useful),
+    "Lead Lens": WikipelagoItemData(ITEM_OFFSET + 11, ItemClassification.useful),
+    "Infobox Lens": WikipelagoItemData(ITEM_OFFSET + 12, ItemClassification.useful),
+    "Contents Lens": WikipelagoItemData(ITEM_OFFSET + 13, ItemClassification.useful),
+    "Navbox Lens": WikipelagoItemData(ITEM_OFFSET + 14, ItemClassification.useful),
+    "Hatnote Lens": WikipelagoItemData(ITEM_OFFSET + 15, ItemClassification.useful),
+    "Reference Lens": WikipelagoItemData(ITEM_OFFSET + 16, ItemClassification.useful),
 }
 
 for index, letter in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ", start=20):

@@ -2,7 +2,7 @@
   "name": "Wikipelago",
   "display_name": "Wikipelago",
   "author": "micha + codex",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "compatible_version": 6,
   "description": "Navigate Wikipedia start-to-target rounds in Archipelago.",
   "homepage": "https://archipelago.gg"

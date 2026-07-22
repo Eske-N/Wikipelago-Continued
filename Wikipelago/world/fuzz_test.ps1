@@ -63,6 +63,17 @@ function Test-LocalSettings([hashtable]$Settings) {
     }
     $searchLettersNeeded = if ($Settings.searchsanity) { 26 - $startingLetters } else { 0 }
     $scrollUpgradesNeeded = if ($Settings.scrollsanity) { 5 } else { 0 }
+    $displayUnlockKeys = @(
+        "randomize_tables",
+        "randomize_pictures",
+        "randomize_incipit",
+        "randomize_infoboxes",
+        "randomize_toc",
+        "randomize_navboxes",
+        "randomize_hatnotes",
+        "randomize_references"
+    )
+    $displayUnlocksNeeded = @($displayUnlockKeys | Where-Object { $Settings[$_] }).Count
 
     if ($required -gt $checkCount) {
         return "required_fragments exceeds check_count"
@@ -72,7 +83,7 @@ function Test-LocalSettings([hashtable]$Settings) {
     }
 
     $roundAccessCount = [Math]::Max(0, [int][Math]::Ceiling(($checkCount - $startUnlocked) / [double]$perUnlock))
-    $mandatoryItems = $required + 3 + $roundAccessCount + $searchLettersNeeded + $scrollUpgradesNeeded
+    $mandatoryItems = $required + 3 + $roundAccessCount + $searchLettersNeeded + $scrollUpgradesNeeded + $displayUnlocksNeeded
     if ($mandatoryItems -gt $checkCount) {
         return "mandatory progression items exceed available round checks"
     }
@@ -99,6 +110,14 @@ function New-WikipelagoSettings {
             searchsanity = Get-RandomBool
             scrollsanity = Get-RandomBool
             search_starting_letters = Get-Random -InputObject $searchLetterModes
+            randomize_tables = Get-RandomBool
+            randomize_pictures = Get-RandomBool
+            randomize_incipit = Get-RandomBool
+            randomize_infoboxes = Get-RandomBool
+            randomize_toc = Get-RandomBool
+            randomize_navboxes = Get-RandomBool
+            randomize_hatnotes = Get-RandomBool
+            randomize_references = Get-RandomBool
             include_video_games = Get-RandomBool
             include_board_games = Get-RandomBool
             include_movies = Get-RandomBool
@@ -141,6 +160,14 @@ Wikipelago:
   searchsanity: $([string]$Settings.searchsanity).ToLower()
   scrollsanity: $([string]$Settings.scrollsanity).ToLower()
   search_starting_letters: $($Settings.search_starting_letters)
+  randomize_tables: $([string]$Settings.randomize_tables).ToLower()
+  randomize_pictures: $([string]$Settings.randomize_pictures).ToLower()
+  randomize_incipit: $([string]$Settings.randomize_incipit).ToLower()
+  randomize_infoboxes: $([string]$Settings.randomize_infoboxes).ToLower()
+  randomize_toc: $([string]$Settings.randomize_toc).ToLower()
+  randomize_navboxes: $([string]$Settings.randomize_navboxes).ToLower()
+  randomize_hatnotes: $([string]$Settings.randomize_hatnotes).ToLower()
+  randomize_references: $([string]$Settings.randomize_references).ToLower()
   include_video_games: $([string]$Settings.include_video_games).ToLower()
   include_board_games: $([string]$Settings.include_board_games).ToLower()
   include_movies: $([string]$Settings.include_movies).ToLower()

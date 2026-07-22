@@ -26,6 +26,14 @@ DEFAULT_ITEMS = {
     "Ctrl+F Lens": 1_870_004,
     "Progressive Scroll Speed": 1_870_008,
     "Round Access": 1_870_007,
+    "Table Lens": 1_870_009,
+    "Picture Lens": 1_870_010,
+    "Lead Lens": 1_870_011,
+    "Infobox Lens": 1_870_012,
+    "Contents Lens": 1_870_013,
+    "Navbox Lens": 1_870_014,
+    "Hatnote Lens": 1_870_015,
+    "Reference Lens": 1_870_016,
 }
 
 SESSION_TTL_SECONDS = 60 * 60 * 6
@@ -75,6 +83,14 @@ class SessionState:
     scrollsanity: bool = False
     scroll_speed_upgrades: int = 5
     search_starting_letters: list[str] = field(default_factory=list)
+    randomize_tables: bool = False
+    randomize_pictures: bool = False
+    randomize_incipit: bool = False
+    randomize_infoboxes: bool = False
+    randomize_toc: bool = False
+    randomize_navboxes: bool = False
+    randomize_hatnotes: bool = False
+    randomize_references: bool = False
     round_pairs: list[dict[str, str]] = field(default_factory=lambda: [{"start": "Wikipedia", "target": "Philosophy"}])
     location_round_ids: list[int] = field(default_factory=list)
     location_grand_goal: int | None = None
@@ -160,6 +176,22 @@ class SessionState:
             "ctrl_f_unlocked": self.has_item("Ctrl+F Lens"),
             "search_letters": self.owned_search_letters(),
             "compass_unlocked": self.has_item("Wiki Compass"),
+            "randomize_tables": self.randomize_tables,
+            "randomize_pictures": self.randomize_pictures,
+            "randomize_incipit": self.randomize_incipit,
+            "randomize_infoboxes": self.randomize_infoboxes,
+            "randomize_toc": self.randomize_toc,
+            "randomize_navboxes": self.randomize_navboxes,
+            "randomize_hatnotes": self.randomize_hatnotes,
+            "randomize_references": self.randomize_references,
+            "tables_unlocked": (not self.randomize_tables) or self.has_item("Table Lens"),
+            "pictures_unlocked": (not self.randomize_pictures) or self.has_item("Picture Lens"),
+            "incipit_unlocked": (not self.randomize_incipit) or self.has_item("Lead Lens"),
+            "infoboxes_unlocked": (not self.randomize_infoboxes) or self.has_item("Infobox Lens"),
+            "toc_unlocked": (not self.randomize_toc) or self.has_item("Contents Lens"),
+            "navboxes_unlocked": (not self.randomize_navboxes) or self.has_item("Navbox Lens"),
+            "hatnotes_unlocked": (not self.randomize_hatnotes) or self.has_item("Hatnote Lens"),
+            "references_unlocked": (not self.randomize_references) or self.has_item("Reference Lens"),
             "warmer_colder": self.warmer_colder,
             "boss_ready": self.boss_ready(),
             "boss_completed": self.boss_completed,
@@ -294,6 +326,14 @@ class APConnection:
         starting_letters = slot_data.get("search_starting_letters", [])
         if isinstance(starting_letters, list):
             self.state.search_starting_letters = [str(letter).upper() for letter in starting_letters if str(letter)]
+        self.state.randomize_tables = bool(slot_data.get("randomize_tables", False))
+        self.state.randomize_pictures = bool(slot_data.get("randomize_pictures", False))
+        self.state.randomize_incipit = bool(slot_data.get("randomize_incipit", False))
+        self.state.randomize_infoboxes = bool(slot_data.get("randomize_infoboxes", False))
+        self.state.randomize_toc = bool(slot_data.get("randomize_toc", False))
+        self.state.randomize_navboxes = bool(slot_data.get("randomize_navboxes", False))
+        self.state.randomize_hatnotes = bool(slot_data.get("randomize_hatnotes", False))
+        self.state.randomize_references = bool(slot_data.get("randomize_references", False))
 
         location_ids = slot_data.get("location_ids", {})
         self.state.location_round_ids = [int(v) for v in location_ids.get("rounds", [])]
