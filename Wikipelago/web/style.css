@@ -87,7 +87,73 @@ button {
   min-width: 0;
 }
 .article-body a { color: #8dd9ff; text-decoration: underline; cursor: pointer; }
-.article-body img, .article-body .mw-editsection { display: none !important; }
+.article-body img,
+.article-body video,
+.article-body .mw-file-element {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+}
+.article-body .thumb,
+.article-body .gallery,
+.article-body figure {
+  max-width: 100%;
+}
+.article-body .mw-editsection { display: none !important; }
+.article-body .wiki-section-external { display: none !important; }
+
+/* Display lenses: hide locked wiki chrome until the matching Lens item arrives */
+.article-body.lock-tables .table-scroll:has(> table:not(.infobox):not(.infobox_v2):not(.navbox):not(.vertical-navbox)),
+.article-body.lock-tables table:not(.infobox):not(.infobox_v2):not(.navbox):not(.vertical-navbox) {
+  display: none !important;
+}
+.article-body.lock-pictures img,
+.article-body.lock-pictures video,
+.article-body.lock-pictures .thumb,
+.article-body.lock-pictures .gallery,
+.article-body.lock-pictures .gallerybox,
+.article-body.lock-pictures figure,
+.article-body.lock-pictures .mw-file-element,
+.article-body.lock-pictures .mw-gallery-style-bordered {
+  display: none !important;
+}
+.article-body.lock-incipit .wiki-lead {
+  display: none !important;
+}
+.article-body.lock-infoboxes .infobox,
+.article-body.lock-infoboxes .infobox_v2,
+.article-body.lock-infoboxes table.infobox,
+.article-body.lock-infoboxes table.infobox_v2,
+.article-body.lock-infoboxes .table-scroll:has(> table.infobox, > table.infobox_v2, > .infobox, > .infobox_v2) {
+  display: none !important;
+}
+.article-body.lock-toc #toc,
+.article-body.lock-toc .toc,
+.article-body.lock-toc .mw-table-of-contents,
+.article-body.lock-toc .sidebar-toc {
+  display: none !important;
+}
+.article-body.lock-navboxes .navbox,
+.article-body.lock-navboxes .navbox-inner,
+.article-body.lock-navboxes .vertical-navbox,
+.article-body.lock-navboxes table.navbox,
+.article-body.lock-navboxes .table-scroll:has(> table.navbox, > .navbox, > .vertical-navbox),
+.article-body.lock-navboxes .wiki-section-seealso {
+  display: none !important;
+}
+.article-body.lock-hatnotes .hatnote,
+.article-body.lock-hatnotes .dablink,
+.article-body.lock-hatnotes .rellink {
+  display: none !important;
+}
+.article-body.lock-references .reference,
+.article-body.lock-references .references,
+.article-body.lock-references .reflist,
+.article-body.lock-references .mw-references-wrap,
+.article-body.lock-references ol.references,
+.article-body.lock-references .wiki-section-references {
+  display: none !important;
+}
 .article-body p, .article-body li { line-height: 1.45; }
 .article-body .mw-parser-output {
   max-width: 100%;
@@ -161,6 +227,9 @@ button {
 .toast { margin-top: 8px; padding: 8px; border-radius: 9px; font-weight: 700; }
 .toast.ok { background: #173a2a; color: #aaffd0; }
 .toast.warn { background: #3a2b14; color: #ffd79d; }
+.debug-lens-list { display: flex; flex-direction: column; gap: 6px; }
+.debug-lens-row { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 0.9rem; cursor: pointer; }
+
 .hidden { display: none; }
 
 @media (max-width: 1000px) {

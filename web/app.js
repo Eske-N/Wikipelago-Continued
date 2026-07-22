@@ -1,5 +1,18 @@
-const APP_VERSION = "2026.07.22.6";
+const APP_VERSION = "2026.07.22.8";
 console.log("Wikipelago web version", APP_VERSION);
+
+const DISPLAY_LOCKS = [
+  { unlockedKey: "tables_unlocked", lockClass: "lock-tables", label: "Tables" },
+  { unlockedKey: "pictures_unlocked", lockClass: "lock-pictures", label: "Pictures" },
+  { unlockedKey: "incipit_unlocked", lockClass: "lock-incipit", label: "Lead" },
+  { unlockedKey: "infoboxes_unlocked", lockClass: "lock-infoboxes", label: "Infoboxes" },
+  { unlockedKey: "toc_unlocked", lockClass: "lock-toc", label: "Contents" },
+  { unlockedKey: "navboxes_unlocked", lockClass: "lock-navboxes", label: "Navboxes" },
+  { unlockedKey: "hatnotes_unlocked", lockClass: "lock-hatnotes", label: "Hatnotes" },
+  { unlockedKey: "references_unlocked", lockClass: "lock-references", label: "References" },
+];
+
+const DEBUG_DISPLAY = new URLSearchParams(window.location.search).has("debug");
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
 const CONNECTION_STORAGE_KEY = "wikipelago_connection";
@@ -15,6 +28,7 @@ const state = {
   announcedGoalComplete: false,
   restoringArticle: false,
   searchOpen: false,
+  debugUnlocks: null,
 };
 
 const el = {
@@ -44,6 +58,7 @@ const el = {
   searchLettersItem: document.getElementById("searchLettersItem"),
   scrollItem: document.getElementById("scrollItem"),
   compassItem: document.getElementById("compassItem"),
+  lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
 };
 
@@ -291,6 +306,8 @@ function updateHUD(status) {
     el.scrollItem.textContent = "Off";
   }
   el.compassItem.textContent = status.compass_unlocked ? "Unlocked" : "Locked";
+  renderLensStatus(status);
+  applyDisplayLocks();
 
   if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
     toast("GOAL COMPLETE! Seed finished.", "ok");
@@ -299,6 +316,76 @@ function updateHUD(status) {
   if (status.last_error) toast(status.last_error, "warn");
   saveLocalProgress();
 }
+
+function isDisplayUnlocked(unlockedKey) {
+  if (state.debugUnlocks && typeof state.debugUnlocks[unlockedKey] === "boolean") {
+    return state.debugUnlocks[unlockedKey];
+  }
+  const status = state.status;
+  if (!status || typeof status[unlockedKey] !== "boolean") return true;
+  return status[unlockedKey];
+}
+
+function applyDisplayLocks() {
+  for (const lock of DISPLAY_LOCKS) {
+    el.articleBody.classList.toggle(lock.lockClass, !isDisplayUnlocked(lock.unlockedKey));
+  }
+}
+
+function renderLensStatus(status) {
+  if (!el.lensesItem) return;
+  const parts = DISPLAY_LOCKS.map((lock) => {
+    const unlocked = status?.[lock.unlockedKey];
+    if (typeof unlocked !== "boolean") return null;
+    return `${lock.label}: ${unlocked ? "On" : "Off"}`;
+  }).filter(Boolean);
+  el.lensesItem.textContent = parts.length ? parts.join(" · ") : "Native wiki";
+}
+
+function initDebugDisplayPanel() {
+  if (!DEBUG_DISPLAY) return;
+  state.debugUnlocks = Object.fromEntries(DISPLAY_LOCKS.map((lock) => [lock.unlockedKey, false]));
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = "<h2>Debug Lenses</h2>";
+  const list = document.createElement("div");
+  list.className = "debug-lens-list";
+
+  for (const lock of DISPLAY_LOCKS) {
+    const label = document.createElement("label");
+    label.className = "debug-lens-row";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = false;
+    input.addEventListener("change", () => {
+      state.debugUnlocks[lock.unlockedKey] = input.checked;
+      applyDisplayLocks();
+      renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+    });
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(` ${lock.label}`));
+    list.appendChild(label);
+  }
+
+  const unlockAll = document.createElement("button");
+  unlockAll.type = "button";
+  unlockAll.textContent = "Unlock all";
+  unlockAll.style.marginTop = "8px";
+  unlockAll.addEventListener("click", () => {
+    for (const lock of DISPLAY_LOCKS) state.debugUnlocks[lock.unlockedKey] = true;
+    list.querySelectorAll("input[type=checkbox]").forEach((input) => { input.checked = true; });
+    applyDisplayLocks();
+    renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+  });
+
+  card.appendChild(list);
+  card.appendChild(unlockAll);
+  document.querySelector(".side-panel")?.appendChild(card);
+  applyDisplayLocks();
+  renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+}
+
 
 async function pollStatus() {
   try {
@@ -313,7 +400,85 @@ async function pollStatus() {
 }
 
 function sanitizeHtml(root) {
-  root.querySelectorAll("script,style,noscript,.reference,.mw-editsection").forEach((n) => n.remove());
+  root.querySelectorAll("script,style,noscript,.mw-editsection").forEach((n) => n.remove());
+}
+
+function isExternalHref(href) {
+  const value = String(href || "").trim();
+  if (!value || value.startsWith("#") || value.startsWith("/wiki/") || value.startsWith("/w/")) return false;
+  if (value.startsWith("//")) return !/^\/\/([a-z0-9-]+\.)?wikipedia\.org\//i.test(value);
+  if (/^https?:\/\//i.test(value)) return !/^https?:\/\/([a-z0-9-]+\.)?wikipedia\.org\//i.test(value);
+  return false;
+}
+
+function unwrapElement(node) {
+  const parent = node.parentNode;
+  if (!parent) {
+    node.remove();
+    return;
+  }
+  while (node.firstChild) parent.insertBefore(node.firstChild, node);
+  node.remove();
+}
+
+function stripExternalLinks(root) {
+  root.querySelectorAll("a[href]").forEach((a) => {
+    if (isExternalHref(a.getAttribute("href"))) unwrapElement(a);
+  });
+}
+
+function headingLabel(node) {
+  return String(node.textContent || "")
+    .replace(/\[\s*edit\s*\]/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function isSectionBreak(node) {
+  if (!(node instanceof Element)) return false;
+  if (node.matches("h2, h3")) return true;
+  if (node.classList.contains("mw-heading")) return true;
+  if (node.id === "toc" || node.classList.contains("toc") || node.classList.contains("mw-table-of-contents")) return true;
+  return false;
+}
+
+function markLeadSection(root) {
+  root.querySelectorAll(".wiki-lead").forEach((node) => node.classList.remove("wiki-lead"));
+  const output = root.querySelector(".mw-parser-output") || root;
+  for (const child of [...output.children]) {
+    if (isSectionBreak(child)) break;
+    if (child.matches(".hatnote, .dablink, .rellink, .infobox, .infobox_v2, table.infobox, table.infobox_v2, .mw-empty-elt, .shortdescription")) {
+      continue;
+    }
+    child.classList.add("wiki-lead");
+  }
+}
+
+function markNamedSections(root, names, className) {
+  root.querySelectorAll(`.${className}`).forEach((node) => node.classList.remove(className));
+  const output = root.querySelector(".mw-parser-output") || root;
+  const wanted = new Set(names.map((name) => name.toLowerCase()));
+  let marking = false;
+  for (const child of [...output.children]) {
+    if (isSectionBreak(child)) {
+      const label = headingLabel(child);
+      marking = [...wanted].some((name) => label === name || label.startsWith(`${name} `));
+    }
+    if (marking) child.classList.add(className);
+  }
+}
+
+function prepareArticleHtml(root) {
+  sanitizeHtml(root);
+  stripExternalLinks(root);
+  markLeadSection(root);
+  markNamedSections(root, ["see also"], "wiki-section-seealso");
+  markNamedSections(root, ["external links", "external link"], "wiki-section-external");
+  markNamedSections(root, ["references", "notes", "citations"], "wiki-section-references");
+  wrapTables(root);
+  rewriteLinks(root);
+  applyDisplayLocks();
 }
 
 function wrapTables(root) {
@@ -335,6 +500,10 @@ function wrapTables(root) {
 function rewriteLinks(root) {
   root.querySelectorAll("a").forEach((a) => {
     const href = a.getAttribute("href") || "";
+    if (isExternalHref(href)) {
+      unwrapElement(a);
+      return;
+    }
     if (!href.startsWith("/wiki/")) return;
     const wikiPart = href.replace("/wiki/", "");
     if (!wikiPart) return;
@@ -364,9 +533,7 @@ async function openArticle(title, options = {}) {
     state.currentTitle = title;
     el.articleTitle.textContent = title;
     el.articleBody.innerHTML = html;
-    sanitizeHtml(el.articleBody);
-    wrapTables(el.articleBody);
-    rewriteLinks(el.articleBody);
+    prepareArticleHtml(el.articleBody);
     state.baseArticleHtml = el.articleBody.innerHTML;
     if (state.searchOpen && el.pageSearchInput.value) {
       const sanitized = sanitizeSearchInput(el.pageSearchInput.value);
@@ -534,6 +701,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+initDebugDisplayPanel();
 setInterval(pollStatus, 1500);
 
 (async () => {
