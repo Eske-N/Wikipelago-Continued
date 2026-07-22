@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.03.26.2";
+const APP_VERSION = "2026.07.22.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
@@ -32,8 +32,10 @@ const el = {
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
   fragmentsText: document.getElementById("fragmentsText"),
+  playableRoundsText: document.getElementById("playableRoundsText"),
   compassHint: document.getElementById("compassHint"),
   roundProgress: document.getElementById("roundProgress"),
+  roundAccessItem: document.getElementById("roundAccessItem"),
   backItem: document.getElementById("backItem"),
   searchItem: document.getElementById("searchItem"),
   searchLettersItem: document.getElementById("searchLettersItem"),
@@ -251,8 +253,10 @@ function updateHUD(status) {
 
   el.clicksText.textContent = String(state.clicksUsed);
   el.fragmentsText.textContent = `${status.fragments}/${status.required_fragments}`;
+  el.playableRoundsText.textContent = `${status.unlocked_rounds}/${status.check_count}`;
   el.compassHint.textContent = status.compass_unlocked ? (status.warmer_colder || "Calibrating") : "Locked";
   el.roundProgress.style.width = `${Math.max(0, Math.min(100, (status.round / Math.max(status.check_count, 1)) * 100))}%`;
+  el.roundAccessItem.textContent = String(status.round_access_count);
   el.backItem.textContent = status.back_button_unlocked ? "Unlocked" : "Locked";
   el.searchItem.textContent = status.ctrl_f_unlocked ? "Unlocked" : "Locked";
   renderSearchStatus();

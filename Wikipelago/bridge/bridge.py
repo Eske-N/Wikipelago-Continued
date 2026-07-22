@@ -150,6 +150,7 @@ class SessionState:
             "required_fragments": self.required_fragments,
             "start_rounds_unlocked": self.start_rounds_unlocked,
             "rounds_per_unlock": self.rounds_per_unlock,
+            "round_access_count": self.round_access_count(),
             "unlocked_rounds": self.unlocked_rounds(),
             "searchsanity": self.searchsanity,
             "scrollsanity": self.scrollsanity,
