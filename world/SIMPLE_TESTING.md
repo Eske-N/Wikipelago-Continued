@@ -1,8 +1,6 @@
 # Simple Testing
 
-Use these from:
-
-`C:\Users\micha\OneDrive\Documents\ARCHIPELAGOBULLSHIT\Manual_Wikipelago_skrump\Manual_Wikipelago_skrump\Wikipelago\world`
+Run these scripts from the `world/` directory (repo root sibling of `bridge/`, `web/`, and `yaml/`).
 
 ## 1. Quick release check
 
