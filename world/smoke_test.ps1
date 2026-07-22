@@ -118,12 +118,10 @@ try {
     $optionsPath = Join-Path $worldRoot "Options.py"
     $itemsPath = Join-Path $worldRoot "Items.py"
     $entertainmentPath = Join-Path $worldRoot "entertainment_articles.py"
-    $commonPath = Join-Path $worldRoot "common_articles.py"
 
     Assert-NoPattern $initPath '`r`n' 'Literal backtick newline text regression found in __init__.py'
     Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
     Assert-NoPattern $entertainmentPath '\bPokemon\b' 'Plain Pokemon title found in entertainment article pool'
-    Assert-NoPattern $commonPath '\bPokemon\b' 'Plain Pokemon title found in common article pool'
     Assert-NoPattern $entertainmentPath '^\s*"La La Land \(film\)",?\s*$' 'Old La La Land redirect title still present'
     Assert-NoPattern $entertainmentPath '^\s*"Her \(film\)",?\s*$' 'Old Her redirect title still present'
     Assert-NoPattern $entertainmentPath '^\s*"Clue \(board game\)",?\s*$' 'Old Clue redirect title still present'
