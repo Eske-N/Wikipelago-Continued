@@ -54,7 +54,7 @@ YAML can enable or disable article categories (for example video games, movies, 
 ## What this repository contains
 
 - `Wikipelago/world/` — APWorld source and build scripts
-- `Wikipelago/yaml/` — player YAML templates ([`Wiki.yaml`](Wikipelago/yaml/Wiki.yaml) is the reference)
+- `Wikipelago/yaml/` — player YAML template ([`Wiki.yaml`](Wikipelago/yaml/Wiki.yaml))
 - `Wikipelago/bridge/` — web client ↔ Archipelago bridge
 - `Wikipelago/web/` — web client UI
 

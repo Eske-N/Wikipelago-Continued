@@ -44,7 +44,6 @@ $webIndexPath = Join-Path (Split-Path -Parent $Root) "web\index.html"
 $webManifestPath = Join-Path (Split-Path -Parent $Root) "web\manifest.webmanifest"
 $webServiceWorkerPath = Join-Path (Split-Path -Parent $Root) "web\service-worker.js"
 $yamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wiki.yaml"
-$fallbackYamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wiki_Entertainment_Fixed.yaml"
 $apworldPath = Join-Path $Root "APWorld\Wikipelago.apworld"
 
 if ($BuildApworld) {
@@ -89,15 +88,10 @@ try {
 }
 
 try {
-    $yamlToCheck = if (Test-Path $yamlPath) {
-        $yamlPath
-    } elseif (Test-Path $fallbackYamlPath) {
-        $fallbackYamlPath
-    } else {
-        $yamlSearchRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Root))
-        $discoveredYaml = Get-ChildItem -Path $yamlSearchRoot -Filter "Wiki.yaml" -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-        if ($discoveredYaml) { $discoveredYaml } else { throw "No Wikipelago YAML template found" }
+    if (-not (Test-Path $yamlPath)) {
+        throw "Missing YAML template at $yamlPath"
     }
+    $yamlToCheck = $yamlPath
     if (-not (Test-StrictUtf8File $yamlToCheck)) {
         throw "YAML template is not strict UTF-8: $yamlToCheck"
     }

@@ -1,46 +1,102 @@
-name: Skrumptily69Wiki
+# Player YAML template for Wikipelago.
+# Copy this file into your Archipelago Players folder and change `name` to your slot name.
+
+name: WikiPlayer
 game: Wikipelago
-description: Async-safe Wikipelago template
+description: Default Wikipelago player template
 
 Wikipelago:
-  # Recommended safe settings:
-  # - check_count: 20-25 for shorter asyncs or 3-4 hour syncs
-  # - required_fragments: 4-5 for gentler pacing
-  # - start_rounds_unlocked: 10+ to reduce early BK risk
-  # - rounds_per_unlock: 4-5 for steady progression
-  #
-  # Generation safety notes:
-  # - Avoid very high check_count with narrow category pools
-  # - If you enable Searchsanity or Scrollsanity, keep check_count modest
-  # - If generation complains about not enough titles, lower check_count or enable more categories
-  # - Random goal article is safer than forcing a preset in a disabled category
+  # Archipelago progression balancing (0-99). Higher values tend to place
+  # useful progression items a bit earlier in the item sphere.
   progression_balancing: 50
+
+  # How many round checks are generated for this player (Start → Target races).
   check_count: 50
+
+  # Knowledge Fragments required to open/finish the Grand Goal.
   required_fragments: 20
+
+  # How many rounds are playable immediately at the start of the seed.
   start_rounds_unlocked: 10
+
+  # Each Round Access item unlocks this many additional rounds.
   rounds_per_unlock: 10
+
+  # If true, the Grand Goal article is chosen randomly from enabled categories.
+  # If false, goal_article_preset below is used instead.
   random_goal_article: true
+
+  # Used only when random_goal_article is false.
+  # Valid values:
+  #   minecraft
+  #   the_legend_of_zelda
+  #   dark_souls
+  #   elden_ring
+  #   super_mario_bros
+  #   pokemon_red_and_blue
+  #   chess
+  #   catan
+  #   the_dark_knight
+  #   star_wars_film
+  #   lord_of_the_rings_fellowship
+  #   the_matrix
+  #   avatar_the_last_airbender
+  #   breaking_bad
+  #   stranger_things
+  #   game_of_thrones
+  #   the_simpsons
+  #   spongebob_squarepants
+  #   super_smash_bros_ultimate
+  #   halo_combat_evolved
   goal_article_preset: dark_souls
+
+  # --- Sanities (off by default) ---
+
+  # If true, Ctrl+F search is limited to letters you have unlocked.
   searchsanity: false
-  scrollsanity: false
+
+  # Starting search letters when searchsanity is on.
+  # Valid values: none | all_vowels | etaoi | raise
   search_starting_letters: none
 
-  # Display unlocks (false = show like normal Wikipedia).
-  # When true, that page element stays locked until its Lens item is received.
+  # If true, scrolling starts slow and needs Scroll Speed upgrades.
+  scrollsanity: false
+
+  # --- Display Lenses (off by default = normal Wikipedia look) ---
+  # When true, that page element stays hidden until its Lens item is received.
+
+  # Hide wiki tables until Table Lens.
   randomize_tables: false
+
+  # Hide images/galleries until Picture Lens.
   randomize_pictures: false
+
+  # Hide the lead/intro paragraphs until Lead Lens.
   randomize_incipit: false
+
+  # Hide infoboxes until Infobox Lens.
   randomize_infoboxes: false
+
+  # Hide the table of contents until Contents Lens.
   randomize_toc: false
+
+  # Hide navboxes and See also until Navbox Lens.
   randomize_navboxes: false
+
+  # Hide hatnotes until Hatnote Lens.
   randomize_hatnotes: false
+
+  # Hide footnotes/references until Reference Lens.
   randomize_references: false
+
+  # --- Article categories ---
+  # Turn categories on/off to shape which articles can appear in rounds.
 
   include_video_games: true
   include_board_games: true
   include_movies: true
   include_tv_shows: true
-  include_anime_manga: false
+  include_anime_manga: true
   include_sports: true
   include_science_space: true
   include_technology: true
