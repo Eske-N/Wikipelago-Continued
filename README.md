@@ -21,7 +21,6 @@ Only some rounds are available at the start (`start_rounds_unlocked`). Extra rou
 - **Back Button** — browser back navigation
 - **Ctrl+F Lens** — in-page search
 - **Wiki Compass** — warmer/colder hints toward the target
-- **Progressive Scroll Speed** — only used when Scrollsanity is enabled
 
 ### Footnotes
 Extra item slots that are not required progression are filled with **Footnote** filler items. They do nothing; they only pad the item pool.
@@ -29,7 +28,7 @@ Extra item slots that are not required progression are filled with **Footnote** 
 ### Searchsanity and Scrollsanity
 Optional YAML toggles (off by default):
 
-- **Searchsanity** — in-page search is limited by **Search Letter** items (you may start with a few letters via `search_starting_letters`).
+- **Searchsanity** — in-page search (via **Ctrl+F Lens**) is limited by **Search Letter** items (you may start with a few letters via `search_starting_letters`).
 - **Scrollsanity** — page scrolling starts slow and improves with **Progressive Scroll Speed** items.
 
 ### Display unlocks (Lenses)
