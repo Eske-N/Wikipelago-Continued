@@ -32,8 +32,9 @@ class RoundsPerUnlock(Range):
 
 
 class RandomGoalArticle(Toggle):
+    """When enabled, the Grand Goal article is chosen randomly from enabled categories."""
     display_name = "Random Goal Article"
-    default = 0
+    default = 1
 
 
 class Searchsanity(Toggle):
