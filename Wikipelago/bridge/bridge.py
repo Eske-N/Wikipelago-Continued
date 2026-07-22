@@ -150,6 +150,7 @@ class SessionState:
             "required_fragments": self.required_fragments,
             "start_rounds_unlocked": self.start_rounds_unlocked,
             "rounds_per_unlock": self.rounds_per_unlock,
+            "round_access_count": self.round_access_count(),
             "unlocked_rounds": self.unlocked_rounds(),
             "searchsanity": self.searchsanity,
             "scrollsanity": self.scrollsanity,
@@ -641,6 +642,17 @@ class App:
     async def index(self, request: web.Request) -> web.StreamResponse:
         return web.FileResponse(self.web_root / "index.html")
 
+    async def manifest(self, request: web.Request) -> web.StreamResponse:
+        response = web.FileResponse(self.web_root / "manifest.webmanifest")
+        response.content_type = "application/manifest+json"
+        return response
+
+    async def service_worker(self, request: web.Request) -> web.StreamResponse:
+        response = web.FileResponse(self.web_root / "service-worker.js")
+        response.headers["Cache-Control"] = "no-cache"
+        response.headers["Service-Worker-Allowed"] = "/"
+        return response
+
     async def health(self, request: web.Request) -> web.StreamResponse:
         return web.json_response({"ok": True, "sessions": len(self.sessions.sessions)})
 
@@ -691,11 +703,14 @@ class App:
     def build(self) -> web.Application:
         app = web.Application()
         app.router.add_get("/", self.index)
+        app.router.add_get("/manifest.webmanifest", self.manifest)
+        app.router.add_get("/service-worker.js", self.service_worker)
         app.router.add_get("/health", self.health)
         app.router.add_post("/api/session", self.create_session)
         app.router.add_post("/api/session/{sid}/connect", self.connect_session)
         app.router.add_get("/api/session/{sid}/status", self.session_status)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
+        app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)
 
         async def startup(_: web.Application) -> None:

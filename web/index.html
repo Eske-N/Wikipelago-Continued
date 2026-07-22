@@ -3,7 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#141d28" />
+  <meta name="description" content="Play Wikipedia racing rounds connected to Archipelago." />
   <title>Wikipelago</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -48,6 +52,7 @@
           <p><strong>Goal:</strong> <span id="goalText">-</span></p>
           <p><strong>Clicks:</strong> <span id="clicksText">0</span></p>
           <p><strong>Fragments:</strong> <span id="fragmentsText">0/0</span></p>
+          <p><strong>Rounds Playable:</strong> <span id="playableRoundsText">0/0</span></p>
           <p><strong>Compass:</strong> <span id="compassHint">-</span></p>
           <div class="progress-wrap"><div id="roundProgress" class="progress"></div></div>
           <div id="toast" class="toast hidden"></div>
@@ -55,6 +60,7 @@
 
         <div class="card">
           <h2>Items</h2>
+          <p>Round Access: <span id="roundAccessItem">0</span></p>
           <p>Back Button: <span id="backItem">Locked</span></p>
           <p>Ctrl+F Lens: <span id="searchItem">Locked</span></p>
           <p>Search Letters: <span id="searchLettersItem">-</span></p>

@@ -1,7 +1,10 @@
-const APP_VERSION = "2026.03.26.2";
+const APP_VERSION = "2026.07.22.6";
 console.log("Wikipelago web version", APP_VERSION);
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
+const CONNECTION_STORAGE_KEY = "wikipelago_connection";
+const DEFAULT_SERVER = "archipelago.gg:";
+const DEFAULT_SLOT = "WikiTester";
 
 const state = {
   sessionId: localStorage.getItem("wikipelago_session_id") || "",
@@ -32,8 +35,10 @@ const el = {
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
   fragmentsText: document.getElementById("fragmentsText"),
+  playableRoundsText: document.getElementById("playableRoundsText"),
   compassHint: document.getElementById("compassHint"),
   roundProgress: document.getElementById("roundProgress"),
+  roundAccessItem: document.getElementById("roundAccessItem"),
   backItem: document.getElementById("backItem"),
   searchItem: document.getElementById("searchItem"),
   searchLettersItem: document.getElementById("searchLettersItem"),
@@ -42,8 +47,30 @@ const el = {
   toast: document.getElementById("toast"),
 };
 
-el.serverInput.value = "archipelago.gg:";
-el.slotInput.value = "WikiTester";
+function loadSavedConnection() {
+  try {
+    const raw = localStorage.getItem(CONNECTION_STORAGE_KEY);
+    if (!raw) return { server: DEFAULT_SERVER, slot: DEFAULT_SLOT };
+    const parsed = JSON.parse(raw);
+    return {
+      server: String(parsed?.server || "").trim() || DEFAULT_SERVER,
+      slot: String(parsed?.slot || "").trim() || DEFAULT_SLOT,
+    };
+  } catch {
+    return { server: DEFAULT_SERVER, slot: DEFAULT_SLOT };
+  }
+}
+
+function saveConnection(server, slot) {
+  localStorage.setItem(CONNECTION_STORAGE_KEY, JSON.stringify({
+    server: String(server || "").trim(),
+    slot: String(slot || "").trim(),
+  }));
+}
+
+const savedConnection = loadSavedConnection();
+el.serverInput.value = savedConnection.server;
+el.slotInput.value = savedConnection.slot;
 
 function toast(text, kind = "ok") {
   el.toast.textContent = text;
@@ -251,8 +278,10 @@ function updateHUD(status) {
 
   el.clicksText.textContent = String(state.clicksUsed);
   el.fragmentsText.textContent = `${status.fragments}/${status.required_fragments}`;
+  el.playableRoundsText.textContent = `${status.unlocked_rounds}/${status.check_count}`;
   el.compassHint.textContent = status.compass_unlocked ? (status.warmer_colder || "Calibrating") : "Locked";
   el.roundProgress.style.width = `${Math.max(0, Math.min(100, (status.round / Math.max(status.check_count, 1)) * 100))}%`;
+  el.roundAccessItem.textContent = String(status.round_access_count);
   el.backItem.textContent = status.back_button_unlocked ? "Unlocked" : "Locked";
   el.searchItem.textContent = status.ctrl_f_unlocked ? "Unlocked" : "Locked";
   renderSearchStatus();
@@ -285,6 +314,22 @@ async function pollStatus() {
 
 function sanitizeHtml(root) {
   root.querySelectorAll("script,style,noscript,.reference,.mw-editsection").forEach((n) => n.remove());
+}
+
+function wrapTables(root) {
+  root.querySelectorAll("table").forEach((table) => {
+    table.removeAttribute("width");
+    if (table.style) {
+      table.style.removeProperty("width");
+      table.style.removeProperty("min-width");
+      table.style.removeProperty("max-width");
+    }
+    if (table.parentElement?.classList.contains("table-scroll")) return;
+    const wrap = document.createElement("div");
+    wrap.className = "table-scroll";
+    table.replaceWith(wrap);
+    wrap.appendChild(table);
+  });
 }
 
 function rewriteLinks(root) {
@@ -320,6 +365,7 @@ async function openArticle(title, options = {}) {
     el.articleTitle.textContent = title;
     el.articleBody.innerHTML = html;
     sanitizeHtml(el.articleBody);
+    wrapTables(el.articleBody);
     rewriteLinks(el.articleBody);
     state.baseArticleHtml = el.articleBody.innerHTML;
     if (state.searchOpen && el.pageSearchInput.value) {
@@ -381,10 +427,13 @@ el.articleBody.addEventListener("wheel", (e) => {
 
 el.connectBtn.addEventListener("click", async () => {
   try {
+    const server = el.serverInput.value.trim();
+    const slotName = el.slotInput.value.trim();
+    saveConnection(server, slotName);
     await ensureSession();
     await api(`/api/session/${state.sessionId}/connect`, "POST", {
-      server: el.serverInput.value.trim(),
-      slot_name: el.slotInput.value.trim(),
+      server,
+      slot_name: slotName,
       password: el.passwordInput.value,
     });
     toast("Connecting to Archipelago...", "ok");
@@ -476,6 +525,14 @@ window.addEventListener("popstate", (e) => {
   const title = e.state?.title;
   if (title) openArticle(title, { countAsClick: false });
 });
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js").catch((err) => {
+      console.warn("Service worker registration failed", err);
+    });
+  });
+}
 
 setInterval(pollStatus, 1500);
 

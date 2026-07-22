@@ -40,6 +40,9 @@ $srcRoot = Join-Path $Root "APWorldSource"
 $worldRoot = Join-Path $srcRoot "Wikipelago"
 $bridgePath = Join-Path (Split-Path -Parent $Root) "bridge\bridge.py"
 $webAppPath = Join-Path (Split-Path -Parent $Root) "web\app.js"
+$webIndexPath = Join-Path (Split-Path -Parent $Root) "web\index.html"
+$webManifestPath = Join-Path (Split-Path -Parent $Root) "web\manifest.webmanifest"
+$webServiceWorkerPath = Join-Path (Split-Path -Parent $Root) "web\service-worker.js"
 $yamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wiki.yaml"
 $fallbackYamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wiki_Entertainment_Fixed.yaml"
 $apworldPath = Join-Path $Root "APWorld\Wikipelago.apworld"
@@ -144,6 +147,11 @@ try {
     Assert-HasPattern $bridgePath 'scrollsanity' 'Bridge scrollsanity state is missing'
     Assert-HasPattern $bridgePath 'scroll_speed_level' 'Bridge scroll speed status is missing'
     Assert-HasPattern $bridgePath 'search_starting_letters' 'Bridge search_starting_letters state is missing'
+    Assert-HasPattern $bridgePath '"round_access_count": self\.round_access_count\(\)' 'Bridge round access count status is missing'
+    Assert-HasPattern $bridgePath '"unlocked_rounds": self\.unlocked_rounds\(\)' 'Bridge unlocked rounds status is missing'
+    Assert-HasPattern $bridgePath '"/manifest\.webmanifest"' 'Bridge PWA manifest route is missing'
+    Assert-HasPattern $bridgePath '"/service-worker\.js"' 'Bridge service worker route is missing'
+    Assert-HasPattern $bridgePath '"/icons/"' 'Bridge PWA icon route is missing'
     Write-Pass "Bridge title-matching safeguards are present"
 } catch {
     $failures.Add($_.Exception.Message)
@@ -158,6 +166,16 @@ try {
     Assert-HasPattern $webAppPath 'SCROLL_SPEED_FACTORS' 'Web scroll speed table is missing'
     Assert-HasPattern $webAppPath 'scrollFactor' 'Web scroll factor helper is missing'
     Assert-HasPattern $webAppPath 'sanitizeSearchInput' 'Web search letter gating helper is missing'
+    Assert-HasPattern $webAppPath 'status\.round_access_count' 'Web round access count display is missing'
+    Assert-HasPattern $webAppPath 'status\.unlocked_rounds' 'Web playable rounds display is missing'
+    Assert-HasPattern $webIndexPath 'id="roundAccessItem"' 'Web round access count element is missing'
+    Assert-HasPattern $webIndexPath 'id="playableRoundsText"' 'Web playable rounds element is missing'
+    Assert-HasPattern $webAppPath 'serviceWorker\.register\("/service-worker\.js"\)' 'Web service worker registration is missing'
+    Assert-HasPattern $webIndexPath 'rel="manifest"' 'Web manifest link is missing'
+    Assert-HasPattern $webManifestPath '"display": "standalone"' 'PWA standalone display mode is missing'
+    Assert-HasPattern $webManifestPath '"sizes": "192x192"' 'PWA 192px icon declaration is missing'
+    Assert-HasPattern $webManifestPath '"sizes": "512x512"' 'PWA 512px icon declaration is missing'
+    Assert-HasPattern $webServiceWorkerPath 'url\.pathname\.startsWith\("/api/"\)' 'Service worker API bypass is missing'
     Write-Pass "Web reconnect/resume safeguards are present"
 } catch {
     $failures.Add($_.Exception.Message)
