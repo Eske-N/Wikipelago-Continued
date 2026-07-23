@@ -1,5 +1,7 @@
 APWorld source lives in `APWorldSource`.
 
+World package version: **0.3.0-Continued** (see `APWorldSource/archipelago.json`).
+
 The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`. That file is what the world uses when generating rounds.
 
 Build APWorld:

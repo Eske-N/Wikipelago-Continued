@@ -1,16 +1,12 @@
-const CACHE_NAME = "wikipelago-shell-2026-07-22-8";
+const CACHE_NAME = "wikipelago-shell-2026-07-23-1";
 
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/app.js",
-  "/style.css",
-  "/static/app.js?v=20260722-8",
-  "/static/style.css?v=20260722-8",
+  "/static/app.js?v=20260723-1",
+  "/static/style.css?v=20260723-1",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
-  "/static/icons/icon-192.png",
-  "/static/icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -21,7 +17,7 @@ self.addEventListener("install", (event) => {
         const response = await fetch(url, { cache: "no-cache" });
         if (response.ok) await cache.put(url, response);
       } catch {
-        // One deployment does not expose both root and /static asset paths.
+        // Ignore individual precache misses.
       }
     }));
     await self.skipWaiting();

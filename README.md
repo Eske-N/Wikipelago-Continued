@@ -84,11 +84,12 @@ YAML can enable or disable article categories (for example video games, movies, 
 
 ## Compatibility
 
+- Wikipelago Continued world version: **0.3.0-Continued**
 - Recommended Archipelago version: **0.6.7**
 
 ## Known issues
 
-- Progress resume after disconnect is not fully reliable yet. If you disconnect, use search (when unlocked) to jump back to your last article and continue.
+- If the Archipelago connection drops mid-run, you can still browse Wikipedia pages, but checks pause until you reconnect. Use Connect again with the same server/slot, then continue from your current page.
 
 ## Credits
 

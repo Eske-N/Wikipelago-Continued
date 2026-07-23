@@ -585,6 +585,20 @@ class APConnection:
 
     async def on_page_check(self, page_title: str, clicks_used: int) -> dict[str, Any]:
         self.state.last_seen = time.time()
+
+        # Refuse gameplay checks while offline so rounds cannot advance without AP.
+        if not self.state.connected_to_ap:
+            return {
+                "matched": False,
+                "target": self.state.current_target(),
+                "advanced": False,
+                "locked": False,
+                "not_connected": True,
+                "boss_completed": self.state.boss_completed,
+                "status": self.state.to_status(),
+                "next_target": self.state.current_target(),
+            }
+
         self.state.last_page = page_title
         self.state.clicks_used = clicks_used
 

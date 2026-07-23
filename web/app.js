@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.22.8";
+const APP_VERSION = "2026.07.23.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -91,6 +91,16 @@ function toast(text, kind = "ok") {
   el.toast.textContent = text;
   el.toast.className = `toast ${kind}`;
   setTimeout(() => { el.toast.className = "toast hidden"; }, 2200);
+}
+
+function isApConnected() {
+  return state.status?.connected_to_ap === true;
+}
+
+function requireApConnection() {
+  if (isApConnected()) return true;
+  toast("Connect to Archipelago to play", "warn");
+  return false;
 }
 
 function normalizeTitle(title) {
@@ -276,11 +286,15 @@ async function ensureSession() {
 
 function updateHUD(status) {
   const wasComplete = state.status?.boss_completed === true;
+  const wasConnected = state.status?.connected_to_ap === true;
   state.status = status;
   state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
   el.connBadge.textContent = status.connected_to_ap ? "Connected" : "Offline";
   el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
 
+  if (wasConnected && !status.connected_to_ap) {
+    toast("Disconnected — browsing only until you reconnect", "warn");
+  }
   if (status.boss_completed) {
     el.roundText.textContent = "COMPLETE";
     el.targetText.textContent = "GOAL COMPLETE";
@@ -526,7 +540,8 @@ async function fetchWikiHtml(title) {
 
 async function openArticle(title, options = {}) {
   if (!title) return;
-  const { countAsClick = false, replaceHistory = false } = options;
+  const { countAsClick = false, replaceHistory = false, requireConnection = false } = options;
+  if (requireConnection && !requireApConnection()) return;
 
   try {
     const html = await fetchWikiHtml(title);
@@ -545,6 +560,18 @@ async function openArticle(title, options = {}) {
     el.clicksText.textContent = String(state.clicksUsed);
     saveLocalProgress();
 
+    if (replaceHistory) {
+      history.replaceState({ title }, "", `#${encodeURIComponent(title)}`);
+    } else {
+      history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
+    }
+
+    // Checks only while connected — browse is allowed if the link drops mid-run.
+    if (!isApConnected()) {
+      if (countAsClick) toast("Disconnected — reconnect to send checks", "warn");
+      return;
+    }
+
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
       page_title: title,
@@ -553,27 +580,22 @@ async function openArticle(title, options = {}) {
 
     if (result.matched) toast("Target hit: " + result.target, "ok");
     if (result.locked) toast("Round locked. Find Round Access items.", "warn");
+    if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn");
     if (result.status) updateHUD(result.status);
-
-    if (replaceHistory) {
-      history.replaceState({ title }, "", `#${encodeURIComponent(title)}`);
-    } else {
-      history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
-    }
   } catch {
     toast(`Could not open article: ${title}`, "warn");
   }
 }
 
 async function restoreArticleView(force = false) {
-  if (!state.status) return;
+  if (!state.status || !isApConnected()) return;
   const desiredTitle = preferredResumeTitle();
   if (!desiredTitle) return;
   if (!force && normalizeTitle(desiredTitle) === normalizeTitle(state.currentTitle)) return;
   if (state.restoringArticle) return;
   state.restoringArticle = true;
   try {
-    await openArticle(desiredTitle, { countAsClick: false, replaceHistory: true });
+    await openArticle(desiredTitle, { countAsClick: false, replaceHistory: true, requireConnection: true });
   } finally {
     state.restoringArticle = false;
   }
@@ -707,5 +729,5 @@ setInterval(pollStatus, 1500);
 (async () => {
   await ensureSession();
   await pollStatus();
-  await restoreArticleView(true);
+  if (isApConnected()) await restoreArticleView(true);
 })();

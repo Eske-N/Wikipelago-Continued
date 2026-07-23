@@ -1,9 +1,9 @@
 ﻿{
   "name": "Wikipelago",
-  "display_name": "Wikipelago",
-  "author": "micha + codex",
-  "version": "0.2.1",
+  "display_name": "Wikipelago Continued",
+  "author": "Eske-N (continued) / original by Skrumptily69",
+  "version": "0.3.0-Continued",
   "compatible_version": 6,
-  "description": "Navigate Wikipedia start-to-target rounds in Archipelago.",
-  "homepage": "https://archipelago.gg"
+  "description": "Navigate Wikipedia start-to-target rounds in Archipelago. Continued fork of the original Wikipelago world.",
+  "homepage": "https://github.com/Eske-N/Wikipelago-Continued"
 }
