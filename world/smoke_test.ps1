@@ -43,7 +43,7 @@ $webAppPath = Join-Path (Split-Path -Parent $Root) "web\app.js"
 $webIndexPath = Join-Path (Split-Path -Parent $Root) "web\index.html"
 $webManifestPath = Join-Path (Split-Path -Parent $Root) "web\manifest.webmanifest"
 $webServiceWorkerPath = Join-Path (Split-Path -Parent $Root) "web\service-worker.js"
-$yamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wiki.yaml"
+$yamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wikipelago.yaml"
 $apworldPath = Join-Path $Root "APWorld\Wikipelago.apworld"
 
 if ($BuildApworld) {

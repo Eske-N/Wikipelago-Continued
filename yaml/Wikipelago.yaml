@@ -1,7 +1,7 @@
 # Player YAML template for Wikipelago.
-# Copy this file into your Archipelago Players folder and change `name` to your slot name.
+# Copy this file into your Archipelago Players folder and change `name` if you need a different slot name.
 
-name: WikiPlayer
+name: wikipelago
 game: Wikipelago
 description: Default Wikipelago player template
 
@@ -11,7 +11,7 @@ Wikipelago:
   progression_balancing: 50
 
   # How many round checks are generated for this player (Start → Target races).
-  check_count: 50
+  check_count: 30
 
   # Knowledge Fragments required to open/finish the Grand Goal.
   required_fragments: 20
@@ -64,7 +64,9 @@ Wikipelago:
 
   # --- Display Lenses (off by default = normal Wikipedia look) ---
   # When true, that page element stays hidden until its Lens item is received.
-
+  # Warning: enabling these (even individually) can make progression much harder,
+  # and stacking several can increase difficulty exponentially.
+  #
   # Hide wiki tables until Table Lens.
   randomize_tables: false
 

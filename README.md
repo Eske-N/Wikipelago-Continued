@@ -37,10 +37,10 @@ Optional YAML toggles such as `randomize_tables`, `randomize_pictures`, `randomi
 - When a toggle is **false** (default), that part of the page shows like normal Wikipedia.
 - When a toggle is **true**, that part stays locked until you receive the matching **Lens** item (for example Table Lens, Picture Lens, Lead Lens).
 
-Full option names and defaults live in [`yaml/Wiki.yaml`](yaml/Wiki.yaml) — treat that file as the source of truth.
+Full option names and defaults live in [`yaml/Wikipelago.yaml`](yaml/Wikipelago.yaml) — treat that file as the source of truth.
 
 ### Category toggles
-YAML can enable or disable article categories (for example video games, movies, history, science). Turn categories on or off in your player YAML to shape the article pool. See [`yaml/Wiki.yaml`](yaml/Wiki.yaml) for the full list.
+YAML can enable or disable article categories (for example video games, movies, history, science). Turn categories on or off in your player YAML to shape the article pool. See [`yaml/Wikipelago.yaml`](yaml/Wikipelago.yaml) for the full list.
 
 ## Core features
 
@@ -53,7 +53,7 @@ YAML can enable or disable article categories (for example video games, movies, 
 ## What this repository contains
 
 - `world/` — APWorld source and build scripts
-- `yaml/` — player YAML template ([`Wiki.yaml`](yaml/Wiki.yaml))
+- `yaml/` — player YAML template ([`Wikipelago.yaml`](yaml/Wikipelago.yaml))
 - `bridge/` — web client to Archipelago bridge
 - `web/` — web client UI
 
