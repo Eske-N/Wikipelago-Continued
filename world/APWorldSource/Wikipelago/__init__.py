@@ -526,12 +526,17 @@ class WikipelagoWorld(World):
         ]
         filtered_pool = self._filter_pool_by_topics(filtered_pool, selected_topics)
 
+        # Strict no-repeat: each round needs distinct start/target material from the pool,
+        # so generation requires about 2 unique titles per round (including the goal).
         needed_total = max(2, round_count * 2)
+        max_rounds_for_pool = len(filtered_pool) // 2
         if len(filtered_pool) < needed_total:
             raise Exception(
-                "Wikipelago category filtering failed: "
-                f"need at least {needed_total} unique titles for {round_count} rounds, "
-                f"but only have {len(filtered_pool)} after applying enabled categories."
+                "Wikipelago cannot generate this seed: "
+                f"check_count={round_count} needs at least {needed_total} unique usable articles, "
+                f"but the enabled categories only provide {len(filtered_pool)} "
+                f"(supports at most {max_rounds_for_pool} rounds). "
+                "Lower check_count or enable more article categories."
             )
 
         if self.options.random_goal_article.value:
@@ -553,10 +558,10 @@ class WikipelagoWorld(World):
         needed_non_goal = max(0, (2 * round_count) - 1)
         if len(remaining) < needed_non_goal:
             raise Exception(
-                "Wikipelago strict no-repeat mode failed: "
-                f"need {needed_non_goal + 1} unique articles total for {round_count} rounds "
-                f"(including goal), but pool has {len(remaining) + 1}. "
-                "Increase article pool or lower check_count."
+                "Wikipelago cannot generate this seed: "
+                f"check_count={round_count} needs {needed_non_goal + 1} unique usable articles "
+                f"(including the goal), but only {len(remaining) + 1} are available after filtering. "
+                "Lower check_count or enable more article categories."
             )
 
         picks = self.random.sample(remaining, needed_non_goal)

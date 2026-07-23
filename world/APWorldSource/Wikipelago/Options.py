@@ -4,16 +4,19 @@ from Options import Choice, PerGameCommonOptions, Range, Toggle
 
 
 class CheckCount(Range):
+    """Number of Start→Target rounds. Hard-capped by current article-pool size."""
     display_name = "Round Count"
     range_start = 10
-    range_end = 5000
+    # Generation needs ~2 unique titles per round (strict no-repeat).
+    # With all categories enabled the usable pool supports at most this many rounds.
+    range_end = 171
     default = 25
 
 
 class RequiredFragments(Range):
     display_name = "Required Fragments"
     range_start = 1
-    range_end = 5000
+    range_end = 171
     default = 5
 
 
