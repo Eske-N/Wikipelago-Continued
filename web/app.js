@@ -549,7 +549,14 @@ async function fetchWikiHtml(title) {
 
 async function openArticle(title, options = {}) {
   if (!title) return;
-  const { countAsClick = false, replaceHistory = false, requireConnection = false } = options;
+  // submitCheck defaults to countAsClick: only in-article wiki clicks may score.
+  // Restore/reconnect/hash/back must never complete a round.
+  const {
+    countAsClick = false,
+    submitCheck = countAsClick,
+    replaceHistory = false,
+    requireConnection = false,
+  } = options;
   if (requireConnection && !requireApConnection()) return;
 
   try {
@@ -575,6 +582,9 @@ async function openArticle(title, options = {}) {
       history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
     }
 
+    // Display-only paths (restore/hash/back) stop here — no scoring.
+    if (!submitCheck) return;
+
     // Checks only while connected — browse is allowed if the link drops mid-run.
     if (!isApConnected()) {
       if (countAsClick) toast("Disconnected — reconnect to send checks", "warn");
@@ -585,6 +595,7 @@ async function openArticle(title, options = {}) {
     const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
       page_title: title,
       clicks_used: state.clicksUsed,
+      submit_check: true,
     });
 
     if (result.matched) {

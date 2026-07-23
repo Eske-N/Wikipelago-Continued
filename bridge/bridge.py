@@ -912,9 +912,28 @@ class App:
         data = await request.json()
         page_title = str(data.get("page_title", "")).strip()
         clicks_used = int(data.get("clicks_used", 0))
+        # Strict mode: display/restore callers must not score. Only intentional
+        # in-article clicks should send submit_check=true (client default).
+        submit_check = bool(data.get("submit_check", True))
 
         if not page_title:
             return web.json_response({"ok": False, "error": "page_title is required"}, status=400)
+
+        if not submit_check:
+            session.conn.state.last_seen = time.time()
+            session.conn.state.last_page = page_title
+            session.conn.state.clicks_used = clicks_used
+            return web.json_response({
+                "ok": True,
+                "matched": False,
+                "advanced": False,
+                "locked": False,
+                "display_only": True,
+                "target": session.conn.state.current_target(),
+                "next_target": session.conn.state.current_target(),
+                "boss_completed": session.conn.state.boss_completed,
+                "status": session.conn.state.to_status(),
+            })
 
         result = await session.conn.on_page_check(page_title, clicks_used)
         return web.json_response({"ok": True, **result})
