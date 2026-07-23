@@ -38,13 +38,14 @@ function Assert-HasPattern([string]$Path, [string]$Pattern, [string]$Message) {
 
 $srcRoot = Join-Path $Root "APWorldSource"
 $worldRoot = Join-Path $srcRoot "Wikipelago"
-$bridgePath = Join-Path (Split-Path -Parent $Root) "bridge\bridge.py"
-$webAppPath = Join-Path (Split-Path -Parent $Root) "web\app.js"
-$webIndexPath = Join-Path (Split-Path -Parent $Root) "web\index.html"
-$webManifestPath = Join-Path (Split-Path -Parent $Root) "web\manifest.webmanifest"
-$webServiceWorkerPath = Join-Path (Split-Path -Parent $Root) "web\service-worker.js"
-$yamlPath = Join-Path (Split-Path -Parent $Root) "yaml\Wikipelago.yaml"
-$apworldPath = Join-Path $Root "APWorld\Wikipelago.apworld"
+$repoRoot = Split-Path -Parent $Root
+$bridgePath = [System.IO.Path]::Combine($repoRoot, "bridge", "bridge.py")
+$webAppPath = [System.IO.Path]::Combine($repoRoot, "web", "app.js")
+$webIndexPath = [System.IO.Path]::Combine($repoRoot, "web", "index.html")
+$webManifestPath = [System.IO.Path]::Combine($repoRoot, "web", "manifest.webmanifest")
+$webServiceWorkerPath = [System.IO.Path]::Combine($repoRoot, "web", "service-worker.js")
+$yamlPath = [System.IO.Path]::Combine($repoRoot, "yaml", "Wikipelago.yaml")
+$apworldPath = [System.IO.Path]::Combine($Root, "APWorld", "Wikipelago.apworld")
 
 if ($BuildApworld) {
     & (Join-Path $Root "build_apworld.ps1") -Root $Root
@@ -107,6 +108,7 @@ try {
     Assert-HasPattern $yamlToCheck 'randomize_navboxes:\s*(true|false)' 'YAML template is missing randomize_navboxes'
     Assert-HasPattern $yamlToCheck 'randomize_hatnotes:\s*(true|false)' 'YAML template is missing randomize_hatnotes'
     Assert-HasPattern $yamlToCheck 'randomize_references:\s*(true|false)' 'YAML template is missing randomize_references'
+    Assert-HasPattern $yamlToCheck 'include_music:\s*(true|false)' 'YAML template is missing include_music'
     Write-Pass "YAML template encoding and preset values look sane"
 } catch {
     $failures.Add($_.Exception.Message)
@@ -123,7 +125,7 @@ try {
     Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
     Assert-NoPattern $entertainmentPath '\bPokemon\b' 'Plain Pokemon title found in entertainment article pool'
     Assert-NoPattern $entertainmentPath 'La La Land \(film\)' 'Old La La Land redirect title still present'
-    Assert-NoPattern $entertainmentPath 'Her \(film\)' 'Old Her redirect title still present'
+    Assert-NoPattern $entertainmentPath '\(''Her \(film\)''' 'Old Her redirect title still present'
     Assert-NoPattern $entertainmentPath 'Clue \(board game\)' 'Old Clue redirect title still present'
     Assert-HasPattern $entertainmentPath 'ENTERTAINMENT_ARTICLE_POOL: list\[tuple\[str, str\]\]' 'Tagged (title, category) pool type annotation missing'
     Assert-HasPattern $initPath 'TOPIC_START_ARTICLES' 'Curated start article map is missing'
@@ -147,6 +149,11 @@ try {
     Assert-HasPattern $itemsPath '"Navbox Lens"' 'Navbox Lens item is missing'
     Assert-HasPattern $itemsPath '"Hatnote Lens"' 'Hatnote Lens item is missing'
     Assert-HasPattern $itemsPath '"Reference Lens"' 'Reference Lens item is missing'
+    Assert-HasPattern $optionsPath 'class IncludeMusic' 'IncludeMusic option is missing'
+    Assert-HasPattern $initPath 'include_music' 'Music category selection is missing'
+    Assert-HasPattern $bridgePath 'MAX_AP_CONNECT_ATTEMPTS' 'Bridge reconnect attempt limit is missing'
+    Assert-HasPattern $webAppPath 'submitCheck' 'Web submitCheck gating is missing'
+    Assert-HasPattern $webAppPath 'toastSticky' 'Web sticky toast helper is missing'
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'
     Write-Pass "Known bad title regressions are absent from source pools"

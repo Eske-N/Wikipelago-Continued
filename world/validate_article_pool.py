@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import time
@@ -140,7 +141,15 @@ def classify_batch(titles: list[str], data: dict) -> dict[str, dict]:
     return results
 
 
-def main() -> None:
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit non-zero if any missing, disambiguation, or duplicate titles are found.",
+    )
+    args = parser.parse_args()
+
     pool = [
         entry[0] if isinstance(entry, (list, tuple)) else entry
         for entry in ENTERTAINMENT_ARTICLE_POOL
@@ -230,8 +239,18 @@ def main() -> None:
     print(f"redirect_ok:     {len(redirect_ok)}")
     print(f"duplicates:      {len(duplicates)}")
     print(f"all_ok:          {ok_count}")
+    if missing:
+        print("missing titles:", ", ".join(missing[:20]))
+    if disambiguation:
+        print("disambiguation titles:", ", ".join(disambiguation[:20]))
+    if duplicates:
+        print("duplicate titles:", ", ".join(list(duplicates)[:20]))
     print(f"\nReport written to: {REPORT_PATH}")
+
+    if args.strict and (missing or disambiguation or duplicates):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -82,6 +82,13 @@ YAML can enable or disable article categories (for example video games, movies, 
 4. Play rounds by navigating from Start → Target.
 5. Collect enough Knowledge Fragments and clear the Grand Goal.
 
+## Continuous integration
+
+Every push and pull request runs GitHub Actions:
+
+- `world/smoke_test.ps1` — encoding and regression string checks
+- `world/validate_article_pool.py --strict` — Wikipedia title validation for the article pool
+
 ## Compatibility
 
 - Wikipelago Continued world version: **0.3.0-Continued**
