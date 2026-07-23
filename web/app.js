@@ -88,15 +88,36 @@ el.serverInput.value = savedConnection.server;
 el.slotInput.value = savedConnection.slot;
 
 let toastTimer = null;
+let stickyToastActive = false;
+let lastStickyError = "";
 
 function toast(text, kind = "ok", durationMs = 5500) {
   el.toast.textContent = text;
   el.toast.className = `toast ${kind}`;
   if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = null;
+  // durationMs <= 0 keeps the toast visible until the next toast replaces it.
+  if (durationMs <= 0) {
+    stickyToastActive = true;
+    return;
+  }
+  stickyToastActive = false;
   toastTimer = setTimeout(() => {
     el.toast.className = "toast hidden";
     toastTimer = null;
   }, durationMs);
+}
+
+function toastSticky(text, kind = "warn") {
+  toast(text, kind, 0);
+}
+
+function clearStickyConnectionError() {
+  lastStickyError = "";
+  if (stickyToastActive && el.toast.classList.contains("warn")) {
+    el.toast.className = "toast hidden";
+    stickyToastActive = false;
+  }
 }
 
 function isApConnected() {
@@ -299,9 +320,10 @@ function updateHUD(status) {
   el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
 
   if (wasConnected && !status.connected_to_ap) {
-    toast("Disconnected — browsing only until you reconnect", "warn", 6500);
+    toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
   }
   if (!wasConnected && status.connected_to_ap) {
+    clearStickyConnectionError();
     toast("Connected to Archipelago", "ok", 4500);
   }
   if (status.boss_completed) {
@@ -336,7 +358,15 @@ function updateHUD(status) {
     toast("GOAL COMPLETE! Seed finished.", "ok", 8000);
     state.announcedGoalComplete = true;
   }
-  if (status.last_error) toast(status.last_error, "warn", 7000);
+  // Connection/auth errors: toast once and keep visible (poll must not spam).
+  if (status.last_error) {
+    if (status.last_error !== lastStickyError) {
+      lastStickyError = status.last_error;
+      toastSticky(status.last_error, "warn");
+    }
+  } else if (status.connected_to_ap) {
+    lastStickyError = "";
+  }
   saveLocalProgress();
 }
 
@@ -643,6 +673,7 @@ el.connectBtn.addEventListener("click", async () => {
     const server = el.serverInput.value.trim();
     const slotName = el.slotInput.value.trim();
     saveConnection(server, slotName);
+    clearStickyConnectionError();
     await ensureSession();
     await api(`/api/session/${state.sessionId}/connect`, "POST", {
       server,
@@ -653,7 +684,7 @@ el.connectBtn.addEventListener("click", async () => {
     await pollStatus();
     await restoreArticleView(true);
   } catch (err) {
-    toast(err.message || "Connect failed", "warn");
+    toastSticky(err.message || "Connect failed", "warn");
   }
 });
 

@@ -37,6 +37,9 @@ DEFAULT_ITEMS = {
 }
 
 SESSION_TTL_SECONDS = 60 * 60 * 6
+# Transient AP drops: retry a few times, then stop and surface last_error.
+# ConnectionRefused (bad password/slot) never retries.
+MAX_AP_CONNECT_ATTEMPTS = 3
 
 
 def normalize_title(title: str) -> str:
@@ -258,23 +261,63 @@ class APConnection:
         self.reader_task = asyncio.create_task(self._connection_loop())
 
     async def _connection_loop(self) -> None:
+        fail_streak = 0
         while True:
             try:
                 ws_url = self._to_ws_url(self.server)
                 async with websockets.connect(ws_url, ping_interval=20, ping_timeout=20, max_size=2**22) as ws:
                     self.ws = ws
                     await self._handshake(ws)
+                    fail_streak = 0
+                    self.state.last_error = ""
                     async for raw in ws:
                         await self._handle_message(raw)
+                self.state.connected_to_ap = False
+                raise RuntimeError("Disconnected from Archipelago server")
             except asyncio.CancelledError:
                 return
             except Exception as exc:
                 self.state.connected_to_ap = False
-                self.state.last_error = str(exc)
+                self.ws = None
+                msg = str(exc)
+                if "ConnectionRefused" in msg:
+                    self.state.last_error = self._friendly_connection_error(msg)
+                    LOG.info("AP connection refused; not retrying: %s", self.state.last_error)
+                    return
+
+                fail_streak += 1
+                if fail_streak >= MAX_AP_CONNECT_ATTEMPTS:
+                    self.state.last_error = (
+                        f"Unable to connect after {MAX_AP_CONNECT_ATTEMPTS} attempts. {self._friendly_connection_error(msg)}"
+                    )
+                    LOG.info("AP connect gave up after %s attempts: %s", fail_streak, msg)
+                    return
+
+                # Keep last_error empty while retrying so the client does not spam toasts.
+                self.state.last_error = ""
+                LOG.info("AP connect retry %s/%s after: %s", fail_streak, MAX_AP_CONNECT_ATTEMPTS, msg)
                 await asyncio.sleep(2)
 
+    @staticmethod
+    def _friendly_connection_error(message: str) -> str:
+        lowered = message.lower()
+        compact = lowered.replace(" ", "")
+        if "connectionrefused" in compact:
+            if "invalidpassword" in compact or "incorrect password" in lowered:
+                return "Connection refused: invalid password."
+            if "invalidslot" in compact:
+                return "Connection refused: invalid slot name."
+            if "invalidgame" in compact:
+                return "Connection refused: wrong game for this slot."
+            return "Connection refused. Check server, slot name, and password."
+        if "getaddrinfo" in lowered or "name or service not known" in lowered:
+            return "Unable to reach server. Check the address."
+        if "timed out" in lowered or "timeout" in lowered:
+            return "Connection timed out."
+        return message
+
     async def _handshake(self, ws: Any) -> None:
-        room_info_raw = await ws.recv()
+        room_info_raw = await asyncio.wait_for(ws.recv(), timeout=30)
         await self._handle_message(room_info_raw)
 
         connect_packet = {
@@ -289,6 +332,15 @@ class APConnection:
             "slot_data": True,
         }
         await ws.send(json.dumps([connect_packet]))
+
+        # Wait here for Connected or ConnectionRefused (raised) before the read loop.
+        deadline = time.time() + 30
+        while not self.state.connected_to_ap:
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                raise RuntimeError("Timed out waiting for Archipelago Connected")
+            raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
+            await self._handle_message(raw)
 
     async def _handle_message(self, raw: str) -> None:
         try:
