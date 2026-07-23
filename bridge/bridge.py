@@ -326,7 +326,7 @@ class APConnection:
             "name": self.slot_name,
             "game": "Wikipelago",
             "uuid": f"wikipelago-cloud-{uuid.uuid4()}",
-            "version": {"major": 0, "minor": 6, "build": 6, "class": "Version"},
+            "version": {"major": 0, "minor": 6, "build": 7, "class": "Version"},
             "items_handling": 7,
             "tags": ["AP", "SlotData"],
             "slot_data": True,
