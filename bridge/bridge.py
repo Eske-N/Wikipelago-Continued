@@ -356,6 +356,7 @@ class APConnection:
                 self.state.connected_to_ap = True
                 self.state.last_error = ""
                 self._apply_connected(packet)
+                await self._canonicalize_active_targets()
                 await self._request_data_package()
             elif cmd == "ConnectionRefused":
                 self.state.last_error = f"ConnectionRefused: {packet.get('errors', [])}"
@@ -484,7 +485,6 @@ class APConnection:
                 self.state.boss_completed = True
                 self.state.goal_status_sent = True
 
-        self._canonicalize_active_targets()
         if not self.state.last_page:
             self.state.last_page = self.state.current_start()
 
@@ -625,15 +625,17 @@ class APConnection:
     async def _canonicalize_title(self, title: str) -> str:
         return await asyncio.to_thread(self._canonicalize_title_sync, title)
 
-    def _canonicalize_active_targets(self) -> None:
+    async def _canonicalize_active_targets(self) -> None:
+        """Resolve active round titles without blocking the event loop."""
         if not self.state.round_pairs:
             return
 
         active_index = min(self.state.round_index, max(len(self.state.round_pairs) - 1, 0))
-        for idx in {active_index, len(self.state.round_pairs) - 1}:
+        indices = {active_index, len(self.state.round_pairs) - 1}
+        for idx in indices:
             pair = self.state.round_pairs[idx]
             pair["start"] = self._canonicalize_known_title(pair.get("start", ""))
-            pair["target"] = self._canonicalize_title_sync(pair.get("target", ""))
+            pair["target"] = await self._canonicalize_title(pair.get("target", ""))
 
     def _fetch_page_links(self, title: str) -> set[str]:
         norm = normalize_title(title)
