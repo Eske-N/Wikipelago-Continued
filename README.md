@@ -93,6 +93,14 @@ YAML can enable or disable article categories (for example video games, movies, 
 
 ## Credits
 
+## Credits
+
 Original Wikipelago by [Skrumptily69](https://github.com/Skrumptily69/Wikipelago).
 
 Continued development and hosting by [Eske-N](https://github.com/Eske-N/Wikipelago-Continued).
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+The original author confirmed they had abandoned the project and gave permission to continue public development (including releases and hosting) while keeping attribution for the original idea and earlier versions.
