@@ -63,7 +63,7 @@ YAML can enable or disable article categories (for example video games, movies, 
 2. Install it in either way:
    - Double-click the `.apworld` file to open it with the Archipelago Launcher, **or**
    - Place it in your Archipelago `custom_worlds` folder.
-3. Restart the **Archipelago Launcher** either way.
+3. Restart the **Archipelago Launcher**.
 4. Put player YAML files in your Archipelago `Players` folder.
 5. Generate the seed with the **Archipelago Launcher**.
 6. Host your room (for example on `archipelago.gg`).
@@ -89,9 +89,7 @@ YAML can enable or disable article categories (for example video games, movies, 
 
 ## Known issues
 
-- If the Archipelago connection drops mid-run, you can still browse Wikipedia pages, but checks pause until you reconnect. Use Connect again with the same server/slot, then continue from your current page.
-
-## Credits
+-
 
 ## Credits
 
