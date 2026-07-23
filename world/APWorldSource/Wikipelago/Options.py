@@ -9,14 +9,14 @@ class CheckCount(Range):
     range_start = 10
     # Generation needs ~2 unique titles per round (strict no-repeat).
     # With all categories enabled the usable pool supports at most this many rounds.
-    range_end = 171
+    range_end = 793
     default = 25
 
 
 class RequiredFragments(Range):
     display_name = "Required Fragments"
     range_start = 1
-    range_end = 171
+    range_end = 793
     default = 5
 
 
@@ -172,6 +172,11 @@ class IncludeMythologyFolklore(Toggle):
     default = 1
 
 
+class IncludeMusic(Toggle):
+    display_name = "Include Music"
+    default = 1
+
+
 class GoalArticlePreset(Choice):
     display_name = "Goal Article Preset (used when random goal is off)"
     option_minecraft = 0
@@ -228,4 +233,5 @@ class WikipelagoOptions(PerGameCommonOptions):
     include_food_cuisine: IncludeFoodCuisine
     include_art_literature: IncludeArtLiterature
     include_mythology_folklore: IncludeMythologyFolklore
+    include_music: IncludeMusic
     goal_article_preset: GoalArticlePreset

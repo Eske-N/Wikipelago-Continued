@@ -13,22 +13,25 @@ from .Options import WikipelagoOptions
 from .Regions import create_regions
 from .entertainment_articles import ENTERTAINMENT_ARTICLE_POOL
 
+# Explicit category tags from the curated pool (preferred over keyword inference).
+ARTICLE_TOPIC_BY_TITLE: dict[str, str] = {
+    title: topic for title, topic in ENTERTAINMENT_ARTICLE_POOL
+}
+
 STOPWORDS: set[str] = {
     "the", "a", "an", "and", "or", "of", "in", "on", "to", "for", "by", "with",
     "at", "from", "into", "about", "after", "before", "over", "under", "new",
 }
 
 BANNED_TITLE_KEYWORDS: tuple[str, ...] = (
-    "gun",
     "rifle",
     "pistol",
     "shotgun",
     "revolver",
     "machine gun",
     "submachine gun",
-    "song",
-    "single",
-    "album",
+    # Avoid bare "gun"/"song"/"album" — false-positives and music pages.
+    # Music (song)/(album)/(single) pages are allowed; other junk still blocked below.
     "discography",
     "president",
     "prime minister",
@@ -116,7 +119,8 @@ TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "world wide web", "openai", "mozilla firefox", "google chrome", "microsoft edge",
     ),
     "history": (
-        "ancient", "history of", "war", "renaissance", "industrial revolution", "middle ages",
+        # Avoid bare "war" — false-positives game titles (Warcraft, Gears of War, etc.).
+        "ancient", "history of", "renaissance", "industrial revolution", "middle ages",
         "roman empire", "world war", "cold war", "silk road", "black death", "moon landing",
         "ancient egypt", "ancient greece",
     ),
@@ -126,8 +130,9 @@ TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "eiffel tower", "taj mahal",
     ),
     "food_cuisine": (
-        "cuisine", "dish", "food", "pizza", "sushi", "pasta", "burger", "taco", "ramen",
-        "chocolate", "coffee", "tea", "ice cream", "sandwich",
+        # Avoid short substrings "dish"/"tea"/"sushi" — false-positives Dishonored, Steam, Tsushima.
+        "cuisine", "food", "pizza", "pasta", "burger", "taco", "ramen",
+        "chocolate", "coffee", "ice cream", "sandwich",
     ),
     "art_literature": (
         "novel", "book", "author", "poetry", "painting", "sculpture", "museum", "theater",
@@ -135,8 +140,15 @@ TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "the hobbit", "pride and prejudice",
     ),
     "mythology_folklore": (
-        "mythology", "folklore", "greek god", "norse", "myth", "legend", "dragon", "vampire",
-        "werewolf", "mermaid", "odin", "zeus", "athena",
+        # Avoid short substrings like "legend"/"dragon"/"myth"/"vampire" — they false-positive
+        # game/show titles (League of Legends, Dragon Age, Age of Mythology, etc.).
+        "mythology", "folklore", "greek god", "norse", "werewolf", "mermaid",
+        "odin", "zeus", "athena",
+    ),
+    "music": (
+        "musician", "singer", "rapper", "composer", "orchestra", "symphony",
+        "grammy", "billboard", "album", "discography", "hip hop", "jazz",
+        "rock music", "pop music", "classical music", "the beatles", "taylor swift",
     ),
 }
 
@@ -270,6 +282,13 @@ TOPIC_START_ARTICLES: dict[str, tuple[str, ...]] = {
         "Legend",
         "Myth",
     ),
+    "music": (
+        "Music",
+        "Song",
+        "Album",
+        "Musician",
+        "Popular music",
+    ),
 }
 
 SEARCH_STARTING_LETTERS: dict[int, set[str]] = {
@@ -385,13 +404,16 @@ class WikipelagoWorld(World):
             return False
         if any(lowered.endswith(suffix) for suffix in BANNED_TITLE_SUFFIXES):
             return False
-        if any(ch in title for ch in ('"', "$", "%", "&", "@", "#")):
+        if any(ch in title for ch in ('"', "$", "%", "@", "#")):
             return False
-        if ":" in title or title.count(",") > 1:
+        # Colons are normal in Wikipedia titles (e.g. "The Elder Scrolls V: Skyrim").
+        # Namespace-style titles are already rejected by the startswith checks above.
+        if title.count(",") > 1:
             return False
         if re.search(r"^\d", title):
             return False
-        if re.search(r"\((disambiguation|album|song|single|magazine|journal)\)$", lowered):
+        # Allow music disambiguators; still block pure disambiguation/magazine/journal pages.
+        if re.search(r"\(disambiguation|magazine|journal\)$", lowered):
             return False
         if len(title.split()) > 6:
             return False
@@ -405,6 +427,10 @@ class WikipelagoWorld(World):
         return {tok for tok in tokens if tok not in STOPWORDS}
 
     def _infer_topic(self, title: str) -> str | None:
+        # Prefer explicit pool tags; fall back to heuristics for start hubs / presets.
+        tagged = ARTICLE_TOPIC_BY_TITLE.get(title)
+        if tagged:
+            return tagged
         lowered = title.lower().strip()
         exact_match = EXACT_TITLE_TOPICS.get(lowered)
         if exact_match:
@@ -417,6 +443,8 @@ class WikipelagoWorld(World):
             return "video_games"
         if "(board game)" in lowered:
             return "board_games"
+        if re.search(r"\((song|album|single|band|musician|rapper|singer)\)$", lowered):
+            return "music"
         for topic, keywords in TOPIC_KEYWORDS.items():
             if any(keyword in lowered for keyword in keywords):
                 return topic
@@ -450,6 +478,8 @@ class WikipelagoWorld(World):
             selected.add("art_literature")
         if self.options.include_mythology_folklore.value:
             selected.add("mythology_folklore")
+        if self.options.include_music.value:
+            selected.add("music")
         return selected
 
     def _filter_pool_by_topics(self, pool: list[str], selected_topics: set[str]) -> list[str]:
@@ -514,10 +544,10 @@ class WikipelagoWorld(World):
         if not selected_topics:
             raise Exception(
                 "Wikipelago requires at least one enabled category. "
-                "Enable one or more category toggles in your YAML (games/movies/shows/anime/sports/science/tech/history/geography/food/art/mythology)."
+                "Enable one or more category toggles in your YAML (games/movies/shows/anime/sports/science/tech/history/geography/food/art/mythology/music)."
             )
 
-        pool = list(dict.fromkeys(ENTERTAINMENT_ARTICLE_POOL))
+        pool = list(dict.fromkeys(title for title, _topic in ENTERTAINMENT_ARTICLE_POOL))
         filtered_pool = [
             title for title in pool
             if self._is_reasonable_title(title)

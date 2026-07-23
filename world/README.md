@@ -2,7 +2,7 @@ APWorld source lives in `APWorldSource`.
 
 World package version: **0.3.0-Continued** (see `APWorldSource/archipelago.json`).
 
-The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`. That file is what the world uses when generating rounds.
+The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
 
 Build APWorld:
 
