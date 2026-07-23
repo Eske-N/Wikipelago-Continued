@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.23.1";
+const APP_VERSION = "2026.07.23.2";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -87,10 +87,16 @@ const savedConnection = loadSavedConnection();
 el.serverInput.value = savedConnection.server;
 el.slotInput.value = savedConnection.slot;
 
-function toast(text, kind = "ok") {
+let toastTimer = null;
+
+function toast(text, kind = "ok", durationMs = 5500) {
   el.toast.textContent = text;
   el.toast.className = `toast ${kind}`;
-  setTimeout(() => { el.toast.className = "toast hidden"; }, 2200);
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.toast.className = "toast hidden";
+    toastTimer = null;
+  }, durationMs);
 }
 
 function isApConnected() {
@@ -293,7 +299,10 @@ function updateHUD(status) {
   el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
 
   if (wasConnected && !status.connected_to_ap) {
-    toast("Disconnected — browsing only until you reconnect", "warn");
+    toast("Disconnected — browsing only until you reconnect", "warn", 6500);
+  }
+  if (!wasConnected && status.connected_to_ap) {
+    toast("Connected to Archipelago", "ok", 4500);
   }
   if (status.boss_completed) {
     el.roundText.textContent = "COMPLETE";
@@ -324,10 +333,10 @@ function updateHUD(status) {
   applyDisplayLocks();
 
   if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
-    toast("GOAL COMPLETE! Seed finished.", "ok");
+    toast("GOAL COMPLETE! Seed finished.", "ok", 8000);
     state.announcedGoalComplete = true;
   }
-  if (status.last_error) toast(status.last_error, "warn");
+  if (status.last_error) toast(status.last_error, "warn", 7000);
   saveLocalProgress();
 }
 
@@ -578,9 +587,13 @@ async function openArticle(title, options = {}) {
       clicks_used: state.clicksUsed,
     });
 
-    if (result.matched) toast("Target hit: " + result.target, "ok");
-    if (result.locked) toast("Round locked. Find Round Access items.", "warn");
-    if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn");
+    if (result.matched) {
+      let msg = `Target hit: ${result.target}`;
+      if (result.sent_text) msg += ` — ${result.sent_text}`;
+      toast(msg, "ok", 7500);
+    }
+    if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
+    if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
     if (result.status) updateHUD(result.status);
   } catch {
     toast(`Could not open article: ${title}`, "warn");
@@ -625,7 +638,7 @@ el.connectBtn.addEventListener("click", async () => {
       slot_name: slotName,
       password: el.passwordInput.value,
     });
-    toast("Connecting to Archipelago...", "ok");
+    toast("Connecting to Archipelago...", "ok", 4500);
     await pollStatus();
     await restoreArticleView(true);
   } catch (err) {

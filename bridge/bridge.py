@@ -106,6 +106,10 @@ class SessionState:
     goal_status_sent: bool = False
     last_error: str = ""
     last_seen: float = field(default_factory=lambda: time.time())
+    slot: int = 0
+    player_names: dict[int, str] = field(default_factory=dict)
+    slot_games: dict[int, str] = field(default_factory=dict)
+    item_id_to_name: dict[str, dict[int, str]] = field(default_factory=dict)
 
     def current_target(self) -> str:
         if self.round_index >= len(self.round_pairs):
@@ -212,6 +216,8 @@ class APConnection:
         self.items_seen = 0
         self.link_cache: dict[str, set[str]] = {}
         self.resolved_title_cache: dict[str, str] = {}
+        self._scout_waiters: dict[int, asyncio.Future] = {}
+        self._datapackage_requested = False
 
     async def connect(self, server: str, slot_name: str, password: str = "") -> None:
         self.server = server
@@ -229,9 +235,18 @@ class APConnection:
         self.state.goal_status_sent = False
         self.state.warmer_colder = None
         self.state.last_distance_estimate = None
+        self.state.slot = 0
+        self.state.player_names.clear()
+        self.state.slot_games.clear()
+        self.state.item_id_to_name.clear()
         self.items_seen = 0
         self.link_cache.clear()
         self.resolved_title_cache.clear()
+        self._datapackage_requested = False
+        for fut in self._scout_waiters.values():
+            if not fut.done():
+                fut.cancel()
+        self._scout_waiters.clear()
 
         if self.reader_task and not self.reader_task.done():
             self.reader_task.cancel()
@@ -289,6 +304,7 @@ class APConnection:
                 self.state.connected_to_ap = True
                 self.state.last_error = ""
                 self._apply_connected(packet)
+                await self._request_data_package()
             elif cmd == "ConnectionRefused":
                 self.state.last_error = f"ConnectionRefused: {packet.get('errors', [])}"
                 raise RuntimeError(self.state.last_error)
@@ -300,9 +316,45 @@ class APConnection:
                     self.state.received_items.append(int(item.get("item")))
                 self.items_seen = max(self.items_seen, index + len(items))
                 await self.try_finish_boss()
+            elif cmd == "DataPackage":
+                self._apply_data_package(packet)
+            elif cmd == "LocationInfo":
+                self._resolve_location_info(packet)
 
     def _apply_connected(self, packet: dict[str, Any]) -> None:
         slot_data = packet.get("slot_data") or {}
+        try:
+            self.state.slot = int(packet.get("slot") or 0)
+        except Exception:
+            self.state.slot = 0
+
+        self.state.player_names.clear()
+        self.state.slot_games.clear()
+        for player in packet.get("players") or []:
+            if not isinstance(player, dict):
+                continue
+            try:
+                slot = int(player.get("slot"))
+            except Exception:
+                continue
+            name = str(player.get("alias") or player.get("name") or f"P{slot}").strip()
+            self.state.player_names[slot] = name or f"P{slot}"
+
+        slot_info = packet.get("slot_info") or {}
+        if isinstance(slot_info, dict):
+            for slot_key, info in slot_info.items():
+                if not isinstance(info, dict):
+                    continue
+                try:
+                    slot = int(slot_key)
+                except Exception:
+                    continue
+                game = str(info.get("game") or "").strip()
+                if game:
+                    self.state.slot_games[slot] = game
+                name = str(info.get("name") or "").strip()
+                if name:
+                    self.state.player_names[slot] = name
 
         pairs = slot_data.get("round_pairs")
         if isinstance(pairs, list) and pairs:
@@ -351,6 +403,13 @@ class APConnection:
             if parsed:
                 self.state.item_ids = parsed
 
+        # Seed local item names so Wikipelago sends resolve even before DataPackage arrives.
+        local_names = {int(v): str(k) for k, v in self.state.item_ids.items()}
+        self.state.item_id_to_name["Wikipelago"] = {
+            **self.state.item_id_to_name.get("Wikipelago", {}),
+            **local_names,
+        }
+
         checked_locations = packet.get("checked_locations", [])
         if isinstance(checked_locations, list):
             restored_checked: set[int] = set()
@@ -376,6 +435,106 @@ class APConnection:
         self._canonicalize_active_targets()
         if not self.state.last_page:
             self.state.last_page = self.state.current_start()
+
+    async def _request_data_package(self) -> None:
+        if self.ws is None or self._datapackage_requested:
+            return
+        games = sorted({game for game in self.state.slot_games.values() if game})
+        if not games:
+            games = ["Wikipelago"]
+        self._datapackage_requested = True
+        payload = [{"cmd": "GetDataPackage", "games": games}]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
+
+    def _apply_data_package(self, packet: dict[str, Any]) -> None:
+        games = ((packet.get("data") or {}).get("games") or {})
+        if not isinstance(games, dict):
+            return
+        for game, data in games.items():
+            if not isinstance(data, dict):
+                continue
+            mapping = data.get("item_name_to_id") or {}
+            if not isinstance(mapping, dict):
+                continue
+            inverted: dict[int, str] = {}
+            for name, item_id in mapping.items():
+                try:
+                    inverted[int(item_id)] = str(name)
+                except Exception:
+                    pass
+            if inverted:
+                merged = dict(self.state.item_id_to_name.get(str(game), {}))
+                merged.update(inverted)
+                self.state.item_id_to_name[str(game)] = merged
+
+    def _resolve_location_info(self, packet: dict[str, Any]) -> None:
+        for entry in packet.get("locations") or []:
+            if not isinstance(entry, dict):
+                continue
+            try:
+                location_id = int(entry.get("location"))
+            except Exception:
+                continue
+            fut = self._scout_waiters.pop(location_id, None)
+            if fut and not fut.done():
+                fut.set_result(entry)
+
+    def _lookup_item_name(self, item_id: int, receiving_slot: int) -> str:
+        game = self.state.slot_games.get(receiving_slot, "Wikipelago")
+        name = self.state.item_id_to_name.get(game, {}).get(item_id)
+        if name:
+            return name
+        for mapping in self.state.item_id_to_name.values():
+            if item_id in mapping:
+                return mapping[item_id]
+        return f"Item {item_id}"
+
+    def _format_send_text(self, network_item: dict[str, Any]) -> str:
+        try:
+            item_id = int(network_item.get("item"))
+            receiving = int(network_item.get("player"))
+        except Exception:
+            return ""
+        item_name = self._lookup_item_name(item_id, receiving)
+        if receiving == self.state.slot:
+            return f"Found your {item_name}"
+        receiver_name = self.state.player_names.get(receiving, f"P{receiving}")
+        return f"Sent {receiver_name}'s {item_name}"
+
+    async def scout_locations(self, location_ids: list[int]) -> dict[int, dict[str, Any]]:
+        if not location_ids or self.ws is None:
+            return {}
+        loop = asyncio.get_running_loop()
+        waiters: dict[int, asyncio.Future] = {}
+        for location_id in location_ids:
+            fut = loop.create_future()
+            self._scout_waiters[location_id] = fut
+            waiters[location_id] = fut
+        payload = [{
+            "cmd": "LocationScouts",
+            "locations": location_ids,
+            "create_as_hint": 0,
+        }]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception:
+            for location_id, fut in waiters.items():
+                self._scout_waiters.pop(location_id, None)
+                if not fut.done():
+                    fut.cancel()
+            return {}
+
+        results: dict[int, dict[str, Any]] = {}
+        for location_id, fut in waiters.items():
+            try:
+                results[location_id] = await asyncio.wait_for(fut, timeout=2.5)
+            except Exception:
+                self._scout_waiters.pop(location_id, None)
+                if not fut.done():
+                    fut.cancel()
+        return results
 
     @staticmethod
     def _to_ws_url(server: str) -> str:
@@ -622,9 +781,15 @@ class APConnection:
                 result["locked"] = True
             else:
                 round_id = self.state.location_round_ids[self.state.round_index]
+                scouted = await self.scout_locations([round_id])
                 await self.send_location_checks([round_id])
                 self.state.round_index += 1
                 result["advanced"] = True
+                network_item = scouted.get(round_id)
+                if network_item:
+                    sent_text = self._format_send_text(network_item)
+                    if sent_text:
+                        result["sent_text"] = sent_text
 
         await self.try_finish_boss()
         await self.ensure_goal_status_if_complete()
