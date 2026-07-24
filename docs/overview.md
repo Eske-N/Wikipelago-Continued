@@ -45,4 +45,4 @@ When you receive an item, the web client updates your unlocked tools / rounds / 
 ## Where are the options?
 
 Wikipelago is a custom world, so there is no options page on archipelago.gg.
-Use the YAML template from [Releases](https://github.com/Eske-N/Wikipelago-Continued/releases) (also in [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml)), and read the [Options guide](options.md) for explanations.
+Use the YAML template from [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases) (also in [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml)), and read the [Options guide](options.md) for explanations.

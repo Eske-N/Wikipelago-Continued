@@ -27,7 +27,7 @@ OPTIONS_PATH = ROOT / "APWorldSource" / "Wikipelago" / "Options.py"
 REPORT_PATH = ROOT / "pool_enrichment_report.json"
 
 API = "https://en.wikipedia.org/w/api.php"
-UA = "WikipelagoPoolEnricher/1.0 (https://github.com/Eske-N/Wikipelago-Continued)"
+UA = "WikipelagoPoolEnricher/1.0 (https://github.com/Dreskn/Wikipelago-Continued)"
 MAX_PER_CATEGORY = 500
 TOP_N_FOR_FLOOR = 10
 FLOOR_FRACTION = 0.40
