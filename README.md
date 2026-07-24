@@ -25,7 +25,7 @@ Looking for more info about Archipelago in general? See the [website](https://ar
 
 Original Wikipelago by [Skrumptily69](https://github.com/Skrumptily69/Wikipelago).
 
-Continued development and hosting by [Eske-N](https://github.com/Eske-N/Wikipelago-Continued).
+Continued development and hosting by [Dreskn](https://github.com/Dreskn/Wikipelago-Continued).
 
 ## License
 
